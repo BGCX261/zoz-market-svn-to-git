@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Mar 10, 2013 2:27:50 PM by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.digo.pojo.Orders" table="orders" catalog="market">
+        <id name="orderId" type="string">
+            <column name="orderId" length="32" />
+            <generator class="assigned" />
+        </id>
+        <many-to-one name="user" class="com.digo.pojo.User" fetch="select" lazy="false">
+            <column name="userId" length="32" not-null="true" />
+        </many-to-one>
+        <property name="orderTime" type="timestamp">
+            <column name="orderTime" length="19" not-null="true" />
+        </property>
+        <property name="receiveAddrId" type="string">
+            <column name="receiveAddrId" length="32" not-null="true" />
+        </property>
+        <property name="orderStatus" type="char">
+            <column name="orderStatus" length="1" not-null="true" />
+        </property>
+        <set name="orderrelations" table="orderrelation" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="orderId" length="32" not-null="true" />
+            </key>
+            <one-to-many class="com.digo.pojo.Orderrelation" />
+        </set>
+    </class>
+</hibernate-mapping>

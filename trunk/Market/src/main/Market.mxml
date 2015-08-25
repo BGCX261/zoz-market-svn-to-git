@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:dropDownLinkButton="comp.dropDownLinkButton.*"
+				xmlns:mx="http://www.adobe.com/2006/mxml"
+				xmlns:searchPanel="comp.searchPanel.*"
+				layout="vertical"
+				minHeight="600"
+				minWidth="955"
+				creationComplete="market_creationCompleteHandler(event)"
+				preinitialize="thisPreinitializeHandler(event)"
+				currentState="logout"
+				paddingBottom="0"
+				paddingLeft="0"
+				paddingRight="0"
+				paddingTop="0"
+				verticalGap="0" xmlns:comp="comp.*">
+	<mx:Script>
+		<![CDATA[  
+			import main.modules.MarketHomePage;
+			import main.modules.market.MarketController;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ModuleEvent;
+			import mx.managers.BrowserManager;
+			import mx.managers.DragManager;
+			import mx.managers.HistoryManager;
+			import mx.managers.IBrowserManager;
+			import mx.managers.IPopUpManager;
+			import mx.messaging.messages.RemotingMessage;
+			import mx.modules.Module;
+			import mx.utils.URLUtil;
+			
+			import util.ModelLocator;
+			
+			import vo.AccountVO;
+			import vo.AddressVO;
+			import vo.CommentVO;
+			import vo.GoodsBeanVO;
+			import vo.OneKindsGoodsVO;
+			import vo.OrderListVO;
+		
+			private var rm:RemotingMessage;
+			private var iPopUpManager:IPopUpManager;
+			private var dragManager:DragManager;
+			private var goodsBeanVO:GoodsBeanVO;
+			private var oneKindsGoodsVO:OneKindsGoodsVO;
+			private var accountVO:AccountVO;
+			private var addressVO:AddressVO;
+			private var commentVO:CommentVO;
+			private var orderListVO:OrderListVO;
+			
+			static private var moduleName:String = "MarketHomePage";
+
+			private var controller:MarketController;
+
+			public var historyManager:HistoryManager;
+
+			protected function forum_clickHandler(event:MouseEvent):void
+			{
+				controller.loadModel("forum");
+			}
+
+			//登录按钮
+			protected function login_clickHandler(event:MouseEvent):void
+			{
+				controller.login("login");
+
+			}
+
+			//
+			protected function market_creationCompleteHandler(event:FlexEvent):void
+			{
+				controller = new MarketController(this);
+				controller.loadModel(moduleName);
+			}
+
+			protected function moduleLoader_readyHandler(event:ModuleEvent):void
+			{
+				controller.moduleReady();
+
+			}
+
+			//注册按钮
+			protected function register_clickHandler(event:MouseEvent):void
+			{
+				controller.login("register");
+
+			}
+
+			//载入css的编译后样式
+			protected function thisPreinitializeHandler(event:FlexEvent):void
+			{
+				StyleManager.loadStyleDeclarations("assets/style/market_orange.swf", true);
+
+			}
+			
+			protected function label_rollOverHandler(event:MouseEvent):void
+			{
+				(event.target as Label).setStyle("textDecoration","underline");
+			}
+			
+			protected function label_rollOutHandler(event:MouseEvent):void
+			{
+				(event.target as Label).setStyle("textDecoration","none");
+			}
+			
+			protected function label_clickHandler(event:MouseEvent):void
+			{
+				controller.displayHelp(0);
+			}
+			
+			protected function logout_clickHandler(event:MouseEvent):void
+			{
+				if(!(moduleLoader.child is MarketHomePage))
+				{
+					controller.loadModel(moduleName);
+				}
+				ModelLocator.logOut();
+				currentState = "logout";
+				label1.text = "";
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Style>
+		.box
+		{   
+			backgroundImage: ClassReference("util.Scin");
+			backgroundSize: "100%";
+			fillColors: #CCDEB4, #E6EFDB;
+			fillAlphas: 1, 0.5;
+			angle: 180;
+			dropShadowEnabled:false;
+		}
+	</mx:Style>
+	<mx:states>
+		<mx:State name="logout">
+
+		</mx:State>
+		<mx:State name="login">
+			<mx:SetProperty value="true" name="visible" target="{lbLogout}"/>
+			<mx:SetProperty value="true" name="includeInLayout" target="{lbLogout}"/>
+			<mx:SetProperty value="false" name="visible" target="{lbLogin}"/>
+			<mx:SetProperty value="false" name="includeInLayout" target="{lbLogin}"/>
+			<mx:SetProperty value="false" name="visible" target="{lbRegister}"/>
+			<mx:SetProperty value="false" name="includeInLayout" target="{lbRegister}"/>
+		</mx:State>
+		
+	</mx:states>
+	<mx:DropShadowFilter id="gfilter"
+						 color="#FFFFFF"
+						 angle="90"
+						 blurX="32"
+						 blurY="128"
+						 distance="10"
+						 inner="false"
+						 strength="10"/>
+	<mx:XML id="menuXML" source="menuXML.xml" format="e4x"/>
+	<mx:HBox styleName="box" width="100%" horizontalAlign="right">
+		<mx:ApplicationControlBar id="appCB"
+								  horizontalAlign="right"
+								  paddingBottom="0"
+								  paddingLeft="50"
+								  paddingRight="50"
+								  dock="true">
+			<mx:Label id="label1" includeInLayout="{(label1.text=='')?false:true}" visible="{(label1.text=='')?false:true}"/>
+			<mx:Spacer width="100%"/>
+			<mx:LinkButton label="Login"
+						   id="lbLogin"
+						   click="login_clickHandler(event)"
+						   fontFamily="Verdana"
+						   textDecoration="none"/>
+			<mx:LinkButton label="Register"
+						   id="lbRegister"
+						   click="register_clickHandler(event)"
+						   fontFamily="Verdana"
+						   textDecoration="none"/>
+			<mx:LinkButton label="Logout"
+						   id="lbLogout"
+						   click="logout_clickHandler(event)"
+						   fontFamily="Verdana"
+						   textDecoration="none"
+						   visible="false"
+						   includeInLayout="false"/>
+			<dropDownLinkButton:DropDownLinkButton id="menu1" fontFamily="Verdana"/>
+			<!--<mx:LinkButton label="Forum"
+						   click="forum_clickHandler(event)"
+						   fontFamily="Verdana"
+						   textDecoration="none"/>-->
+
+		</mx:ApplicationControlBar>
+
+	</mx:HBox>
+	<mx:Canvas id="can"
+			   height="100%"
+			   horizontalScrollPolicy="off"
+			   verticalLineScrollSize="12"
+			   verticalScrollPolicy="auto"
+			   width="100%">
+		<mx:VBox height="100%" width="100%">
+			<!--搜索条-->
+			<comp:SearchPanel id="search" width="100%"/>
+			
+			<!--页面主要内容（模块载入）-->
+			<mx:ModuleLoader height="100%" id="moduleLoader" width="100%" ready="moduleLoader_readyHandler(event)"/>
+			
+			<!--页面最下方的各种声明，帮助-->
+			<mx:VBox paddingLeft="30" paddingRight="30" paddingBottom="20" width="100%">
+				<mx:HBox width="100%" horizontalGap="0" borderStyle="solid"
+						 paddingTop="10" paddingBottom="10">
+					<mx:VBox width="25%" horizontalAlign="center">
+						<mx:VBox>
+							<mx:Label text="Shopping Directory" fontWeight="bold" fontSize="14"/>
+							<mx:Label text="Shopping process"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="Registration steps"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="Common problem"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="Contact customer service"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+						</mx:VBox>
+					</mx:VBox>
+					<mx:VBox width="25%" horizontalAlign="center">
+						<mx:VBox>
+							<mx:Label text="Distribution mode" fontWeight="bold" fontSize="14"/>
+							<mx:Label text="Home from the mentioned"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="Express transportation"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="How to give gifts"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="Global Shipping"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+						</mx:VBox>
+					</mx:VBox>
+					<mx:VBox width="25%" horizontalAlign="center">
+						<mx:VBox>
+							<mx:Label text="Mode of payment" fontWeight="bold" fontSize="14"/>
+							<mx:Label text="Cash on delivery"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="Online payment"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="The post office remittance"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="The company transfers"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+						</mx:VBox>
+					</mx:VBox>
+					<mx:VBox width="25%" horizontalAlign="center">
+						<mx:VBox>
+							<mx:Label text="After-sale service" fontWeight="bold" fontSize="14"/>
+							<mx:Label text="After sale service policy"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="After sale service process"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="Refund instructions"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+							<mx:Label text="Cancel the order"
+									  rollOver="label_rollOverHandler(event)"
+									  rollOut="label_rollOutHandler(event)"
+									  click="label_clickHandler(event)"/>
+						</mx:VBox>
+					</mx:VBox>
+				</mx:HBox>
+			</mx:VBox>
+		</mx:VBox>
+
+	</mx:Canvas>
+
+</mx:Application>

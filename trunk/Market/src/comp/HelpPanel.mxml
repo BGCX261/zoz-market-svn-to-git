@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+		  layout="vertical"
+		  minHeight="400"
+		  minWidth="300"
+		  titleStyleName="panelTitleStyle"
+		  horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+			import util.PopUpUtil;
+			
+			private var _txt:String;
+
+			[Bindable]
+			public function get txt():String
+			{
+				return _txt;
+			}
+
+			public function set txt(value:String):void
+			{
+				_txt = value;
+			}
+
+		]]>
+	</mx:Script>
+	<mx:TextArea height="100%" minHeight="200" text="{txt}" width="100%" editable="false" borderSides="bottom"/>
+	<mx:HBox width="100%" horizontalGap="30" horizontalAlign="center" paddingBottom="8">
+		<mx:Button label="OK" click="{PopUpUtil.remove(this)}"/>
+	</mx:HBox>
+	
+</mx:Panel>

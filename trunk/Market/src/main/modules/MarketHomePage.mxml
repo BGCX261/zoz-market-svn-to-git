@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:comp="comp.*"
+		   xmlns:mx="http://www.adobe.com/2006/mxml"
+		   xmlns:rightPopDetailBoxBar="comp.rightPopDetailBoxBar.*"
+		   height="100%"
+		   layout="vertical"
+		   width="100%"
+		   creationComplete="module1_creationCompleteHandler(event)"
+		   paddingLeft="30"
+		   paddingRight="30" xmlns:container="comp.container.*">
+	<mx:Script>
+		<![CDATA[
+			
+			import main.modules.marketHomePage.MarketHomePageController;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.utils.UIDUtil;
+			
+			import util.StaticTool;
+
+			/**
+			 * 活动图数据源
+			 */
+			private var _listImageAC:ArrayCollection;
+
+			public var controller:MarketHomePageController
+			
+			[Bindable]
+			private var imageIndex:int = 0;
+
+			[Bindable]
+			private var rep:RegExp = /\-/g;
+
+			private var timeTick:Timer;
+
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				controller.getManager1();
+
+			}
+
+			protected function changeImage(e:TimerEvent):void
+			{
+				if(imageIndex >= listImageAC.length - 1)
+				{
+					imageIndex = 0;
+				}
+				else
+				{
+					imageIndex++;
+				}
+
+			}
+
+			protected function listImage_rollOverHandler(event:MouseEvent):void
+			{
+				imageIndex = listImageAC.getItemIndex(event.currentTarget.source);
+				timeTick.stop();
+				timeTick.start();
+
+			}
+
+			protected function module1_creationCompleteHandler(event:FlexEvent):void
+			{
+
+				controller = new MarketHomePageController(this);
+				timeTick = new Timer(3000, 0);
+				timeTick.addEventListener(TimerEvent.TIMER, changeImage);
+				timeTick.start();
+
+			}
+
+			[Bindable]
+			public function get listImageAC():ArrayCollection
+			{
+				return _listImageAC;
+
+			}
+
+			public function set listImageAC(value:ArrayCollection):void
+			{
+				_listImageAC = new ArrayCollection();
+				for each(var str:String in value)
+				{
+					_listImageAC.addItem(StaticTool.imageRoot + str);
+				}
+
+			}
+		]]>
+	</mx:Script>
+	<mx:XML id="menuXML" source="menuXML.xml" format="e4x"/>
+	<mx:HBox width="100%">
+		<mx:VBox>
+			<rightPopDetailBoxBar:RightPopDetailBoxBar id="detailList"/>
+		</mx:VBox>
+		<mx:ViewStack width="100%" id="vs" resizeToContent="true">
+			
+			<mx:VBox width="100%">
+				<!--分类首页-->
+				<mx:HBox minHeight="400" width="100%" horizontalGap="0">
+					<mx:Canvas height="100%" horizontalScrollPolicy="off" width="100%">
+						<mx:Image height="100%"
+								  id="homePageImage"
+								  source="{listImageAC.getItemAt(imageIndex)}"
+								  maintainAspectRatio="false"
+								  scaleContent="true"/>
+					</mx:Canvas>
+					<mx:VBox width="200" paddingLeft="1" verticalGap="0">
+						<mx:Repeater dataProvider="{listImageAC}" id="listImage" width="100%">
+							<mx:Canvas height="100%" horizontalScrollPolicy="off" width="100%">
+								<mx:Image height="100"
+										  id="tipImage"
+										  source="{listImage.currentItem}"
+										  rollOver="listImage_rollOverHandler(event)"
+										  maintainAspectRatio="true"
+										  scaleContent="true"/>
+							</mx:Canvas>
+						</mx:Repeater>
+					</mx:VBox>
+				</mx:HBox>
+				<mx:VBox width="100%" id="listKinds" verticalGap="0">
+					
+				</mx:VBox>
+				<mx:Button label="Click me" click="button1_clickHandler(event)"/>
+			</mx:VBox>
+			
+			<mx:VBox id="searchView" width="100%">
+				<!--单类列表-->
+				
+			</mx:VBox>
+			
+			<mx:VBox id="detailView" width="100%" backgroundColor="#FFFFFF">
+				<!--单品详细-->
+				
+			</mx:VBox>
+		</mx:ViewStack>
+	</mx:HBox>
+</mx:Module>

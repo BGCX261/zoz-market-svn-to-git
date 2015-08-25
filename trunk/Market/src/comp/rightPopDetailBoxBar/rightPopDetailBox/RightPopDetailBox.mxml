@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:container="comp.container.*" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.containers.VBox;
+			import mx.controls.Label;
+			import mx.controls.LinkButton;
+			import mx.events.DynamicEvent;
+			import mx.events.FlexEvent;
+			import util.StaticTool;
+			import vo.TreeNodeVO_TypeChildren;
+
+			private var _groupsAC:ArrayCollection;
+
+			private function initComplete():void
+			{
+				var flowBox1AC:ArrayCollection = new ArrayCollection();
+				for(var i:int = 0; i < _groupsAC.length; i++)
+				{
+					var item:TreeNodeVO_TypeChildren = _groupsAC.getItemAt(i) as TreeNodeVO_TypeChildren;
+					var btnAC:ArrayCollection = new ArrayCollection();
+					var labelItem:Label = (flowBox1.dataProvider.getItemAt(i) as VBox).getChildAt(0)
+						as Label;
+					labelItem.text = item.label;
+					var flowItem:flowBox = (flowBox1.dataProvider.getItemAt(i) as VBox).getChildAt(1)
+						as flowBox;
+					for each(var btnItem:TreeNodeVO_TypeChildren in item.children)
+					{
+						var btn:LinkButton = new LinkButton();
+						btn.label = btnItem.label;
+						btn.data = btnItem;
+						btn.addEventListener(MouseEvent.CLICK, linkBtnClick);
+						btnAC.addItem(btn);
+					}
+					flowItem.dataProvider = btnAC;
+				}
+
+			}
+
+			private function initDetailBox():void
+			{
+				var flowBox1AC:ArrayCollection = new ArrayCollection();
+				for each(var item:TreeNodeVO_TypeChildren in _groupsAC)
+				{
+					var labelItem:Label = new Label();
+					labelItem.percentWidth = 100;
+					labelItem.setStyle("textAlign", "center");
+					labelItem.setStyle("fontWeight", "bold");
+					var flowItem:flowBox = new flowBox();
+					flowItem.direction = "horizontal";
+					var vboxItem:VBox = new VBox();
+					vboxItem.setStyle("verticalGap", 0);
+					vboxItem.addChild(labelItem);
+					vboxItem.addChild(flowItem);
+					flowBox1AC.addItem(vboxItem);
+				}
+				flowBox1.dataProvider = flowBox1AC;
+
+			}
+
+			private function initFlowItem(event:FlexEvent):void
+			{
+				(event.target as flowBox).dataProvider;
+
+			}
+
+			private function linkBtnClick(event:MouseEvent):void
+			{
+				var e:DynamicEvent = new DynamicEvent(StaticTool.LINK)
+				e.data = event.currentTarget.data.value;
+				dispatchEvent(e);
+
+			}
+
+			[Bindable]
+			public function get groupsAC():ArrayCollection
+			{
+				return _groupsAC;
+
+			}
+
+			public function set groupsAC(value:ArrayCollection):void
+			{
+				_groupsAC = value;
+				initDetailBox();
+				initComplete();
+
+			}
+		]]>
+	</mx:Script>
+	<container:flowBox direction="vertical" height="100%" id="flowBox1" width="100%"/>
+
+</mx:Box>

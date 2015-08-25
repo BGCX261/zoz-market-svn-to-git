@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="{this.parent.width}" creationComplete="canvas1_creationCompleteHandler(event)">
+	<mx:Script>
+		<![CDATA[
+			import flash.utils.setTimeout;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.LinkButton;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+
+			/*
+			 *UIComponent队列
+			 */
+			[Bindable]
+			private var _dataProvider:ArrayCollection;
+
+			/*
+			 *"vertical"or"horizontal"元素布局排列方式
+			 */
+			[Bindable]
+			public var direction:String;
+
+			protected function canvas1_creationCompleteHandler(event:FlexEvent):void
+			{
+				reDrawRoot();
+
+			}
+
+			protected function reDrawRoot():void
+			{
+				rootBox.removeAllChildren();
+				var box:Box = new Box();
+				var autoSize:int = 0;
+				var pro:String = (direction == 'horizontal') ? "width" : "height";
+				box.direction = direction;
+				box.setStyle(direction + "Gap", 0);
+				rootBox.setStyle(((direction == 'horizontal') ? 'vertical' : 'horizontal')
+					+ "Gap", 0);
+				for each(var item:UIComponent in _dataProvider)
+				{
+					if(autoSize + item[pro] > this.width)
+					{
+						rootBox.addChild(box);
+						box = new Box();
+						autoSize = 0;
+						box.direction = direction;
+						box.setStyle(direction + "Gap", 0);
+					}
+					box.addChild(item);
+					autoSize += item[pro];
+				}
+				if(box.getChildren().length > 0)
+				{
+					rootBox.addChild(box);
+				}
+
+			}
+
+			[Bindable]
+			public function get dataProvider():ArrayCollection
+			{
+				return _dataProvider;
+
+			}
+
+			public function set dataProvider(value:ArrayCollection):void
+			{
+				_dataProvider = value;
+				if(_dataProvider.length > 0)
+				{
+					reDrawRoot();
+				}
+
+			}
+		]]>
+	</mx:Script>
+	<mx:Box direction="{(direction=='horizontal')?'vertical':'horizontal'}" id="rootBox" width="100%">
+	</mx:Box>
+
+</mx:Canvas>

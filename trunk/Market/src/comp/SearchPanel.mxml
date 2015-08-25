@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+		 height="70"
+		 styleName="box"
+		 width="100%"
+		 horizontalGap="0"
+		 paddingLeft="30"
+		 paddingRight="30"
+		 verticalAlign="bottom">
+	<mx:Style>
+	.box
+	{   
+	backgroundImage: ClassReference("util.Scin");
+	backgroundSize: "100%";
+	fillColors: #CCDEB4, #E6EFDB;
+	fillAlphas: 1, 0.5;
+	angle: 180;
+	}   
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.DynamicEvent;
+			import util.StaticTool;
+
+			private var superPageName:String = "MarketHomePage";
+
+			protected function logo_clickHandler(event:MouseEvent):void
+			{
+				var e:DynamicEvent = new DynamicEvent(StaticTool.LINK)
+				e.data = superPageName;
+				dispatchEvent(e);
+
+			}
+
+			protected function searchBtn_clickHandler(event:MouseEvent):void
+			{
+				var e:DynamicEvent = new DynamicEvent(StaticTool.Search)
+				e.data = superPageName;
+				e.searchValue = search.text;
+				dispatchEvent(e);
+
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox height="100%" width="100%" paddingLeft="40" verticalAlign="top">
+		<mx:Image source="assets/image/digo.png" click="logo_clickHandler(event)" buttonMode="true"/>
+
+	</mx:HBox>
+	<mx:HBox horizontalGap="0" paddingBottom="15">
+		<mx:TextInput height="30"
+					  id="search"
+					  width="450"
+					  fontSize="20"
+					  enter="{btn.dispatchEvent(new MouseEvent(MouseEvent.CLICK))}"/>
+		<mx:Button height="30"
+				   id="btn"
+				   label="search"
+				   width="80"
+				   click="searchBtn_clickHandler(event)"
+				   cornerRadius="0"
+				   fontSize="14"/>
+
+	</mx:HBox>
+
+</mx:HBox>

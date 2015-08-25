@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:flex="http://www.springframework.org/schema/flex"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/flex 
+           http://www.springframework.org/schema/flex/spring-flex-1.0.xsd">
+	<import resource="applicationContext_hibernate.xml"/>
+	<bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+    	<property name="mappings">
+    		<value>/*=_messageBroker</value>
+    	</property>
+ 	</bean>
+	<flex:message-broker/>
+ 	<bean class="org.springframework.flex.servlet.MessageBrokerHandlerAdapter"/>
+
+	<bean id="facade" class="com.Facade">
+		<flex:remoting-destination/>
+		<property name="iManagerOne" ref="managerOne"></property>
+	</bean>
+
+	<bean id="managerOne" class="com.managerOne.ManagerOne">
+    	<property name="roleHome" ref="roleHome"></property>
+    	<property name="zCreateData" ref="zCreateData"></property>
+    	<property name="goodsHome" ref="goodsHome"></property>
+    	<property name="commentHome" ref="commentHome"></property>
+    	<property name="userHome" ref="userHome"></property>
+    	<property name="receiveaddressHome" ref="receiveaddressHome"></property>
+    	<property name="ordersHome" ref="ordersHome"></property>
+    	<property name="orderrelationHome" ref="orderrelationHome"></property>
+    	<property name="accountHome" ref="accountHome"></property>
+    	<property name="recordsHome" ref="recordsHome"></property>
+    </bean>
+	
+	<bean id="zCreateData" class="com.digo.home.ZCreateData">
+		<property name="userHome" ref="userHome"></property>
+		<property name="accountHome" ref="accountHome"></property>
+		<property name="raHome" ref="receiveaddressHome"></property>
+		<property name="goodsHome" ref="goodsHome"></property>
+		<property name="ordersHome" ref="ordersHome"></property>
+		<property name="commentHome" ref="commentHome"></property>
+		<property name="orHome" ref="orderrelationHome"></property>
+		<property name="powerHome" ref="powerHome"></property>
+		<property name="roleHome" ref="roleHome"></property>
+		<property name="rrHome" ref="rolerelationHome"></property>
+	</bean>
+	
+	<bean id="BaseDao" class="com.digo.base.BaseDao">  
+        <property name="sessionFactory" ref="marketSessionFactory"/>  
+    </bean>
+    
+	<bean id="accountHome" class="com.digo.home.AccountHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+
+	<bean id="commentHome" class="com.digo.home.CommentHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+	
+	<bean id="goodsHome" class="com.digo.home.GoodsHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+	
+	<bean id="orderrelationHome" class="com.digo.home.OrderrelationHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+	
+	<bean id="ordersHome" class="com.digo.home.OrdersHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+	
+	<bean id="powerHome" class="com.digo.home.PowerHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+	
+	<bean id="receiveaddressHome" class="com.digo.home.ReceiveaddressHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+	
+	<bean id="recordsHome" class="com.digo.home.RecordsHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+	
+	<bean id="roleHome" class="com.digo.home.RoleHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+	</bean>
+	
+	<bean id="rolerelationHome" class="com.digo.home.RolerelationHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+		<property name="powerHome" ref="powerHome" />
+	</bean>
+	
+	<bean id="userHome" class="com.digo.home.UserHome">
+		<property name="sessionFactory" ref="marketSessionFactory" />
+		<property name="roleHome" ref="roleHome" />
+		<property name="rolerelationHome" ref="rolerelationHome" />
+	</bean>
+   
+</beans>

@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Mar 10, 2013 2:27:50 PM by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.digo.pojo.Goods" table="goods" catalog="market">
+        <id name="goodsId" type="string">
+            <column name="goodsId" length="32" />
+            <generator class="assigned" />
+        </id>
+        <many-to-one name="user" class="com.digo.pojo.User" fetch="select" lazy="false">
+            <column name="merId" length="32" not-null="true" />
+        </many-to-one>
+        <property name="goodsType" type="string">
+            <column name="goodsType" length="8" not-null="true">
+                <comment>
+                &#201;&#204;&#198;&#183;&#192;&#224;&#208;&#205;&#199;&#176;&#203;&#196;&#206;&#187;&#180;&#243;&#192;&#224;&#177;&#240;&#163;&#172;&#186;&#243;&#203;&#196;&#206;&#187;&#208;&#161;&#192;&#224;&#177;&#240;</comment>
+            </column>
+        </property>
+        <property name="goodsName" type="string">
+            <column name="goodsName" length="32" not-null="true" />
+        </property>
+        <property name="goodsPrice" type="float">
+            <column name="goodsPrice" precision="12" scale="0" not-null="true">
+                <comment>&#188;&#219;&#184;&#241;</comment>
+            </column>
+        </property>
+        <property name="goodsCount" type="int">
+            <column name="goodsCount" not-null="true">
+                <comment>&#191;&#226;&#180;&#230;</comment>
+            </column>
+        </property>
+        <property name="goodsUnit" type="string">
+            <column name="goodsUnit" length="8" not-null="true">
+                <comment>&#181;&#165;&#206;&#187;</comment>
+            </column>
+        </property>
+        <property name="goodsDes" type="string">
+            <column name="goodsDes" length="512" not-null="true">
+                <comment>&#201;&#204;&#198;&#183;&#195;&#232;&#202;&#246;</comment>
+            </column>
+        </property>
+        <property name="goodsInfo" type="string">
+            <column name="goodsInfo" length="1024" not-null="true">
+                <comment>&#201;&#204;&#198;&#183;&#208;&#197;&#207;&#162;</comment>
+            </column>
+        </property>
+        <property name="goodsImage" type="string">
+            <column name="goodsImage" length="256" not-null="true">
+                <comment>&#201;&#204;&#198;&#183;&#205;&#188;&#198;&#172;</comment>
+            </column>
+        </property>
+        <property name="initTime" type="timestamp">
+            <column name="initTime" length="19" not-null="true">
+                <comment>&#194;&#188;&#200;&#235;&#202;&#177;&#188;&#228;</comment>
+            </column>
+        </property>
+        <property name="promotionValue" type="string">
+            <column name="promotionValue" length="32" not-null="true">
+                <comment>&#180;&#217;&#207;&#250;&#183;&#189;&#202;&#189;&#163;&#172;&#180;&#242;&#213;&#219;0.XX&#163;&#172;&#189;&#181;&#188;&#219;-XXX</comment>
+            </column>
+        </property>
+        <property name="promotionKey" type="char">
+            <column name="promotionKey" length="1" not-null="true">
+                <comment>&#180;&#217;&#207;&#250;&#192;&#224;&#177;&#240;&#163;&#172;0&#180;&#242;&#213;&#219;&#163;&#172;1&#189;&#181;&#188;&#219;</comment>
+            </column>
+        </property>
+        <property name="remark" type="string">
+            <column name="remark" length="32" not-null="true">
+                <comment>&#177;&#184;&#215;&#162;</comment>
+            </column>
+        </property>
+        <set name="orderrelations" table="orderrelation" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="goodsId" length="32" not-null="true" />
+            </key>
+            <one-to-many class="com.digo.pojo.Orderrelation" />
+        </set>
+        <set name="comments" table="comment" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="goodsId" length="32" not-null="true">
+                    <comment>&#201;&#204;&#198;&#183;ID</comment>
+                </column>
+            </key>
+            <one-to-many class="com.digo.pojo.Comment" />
+        </set>
+    </class>
+</hibernate-mapping>

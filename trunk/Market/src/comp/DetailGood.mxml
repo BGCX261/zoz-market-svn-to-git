@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.DynamicEvent;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.utils.ObjectUtil;
+			import mx.utils.StringUtil;
+			
+			import util.ModelLocator;
+			import util.StaticTool;
+			
+			import vo.CommentVO;
+			import vo.GoodsBeanVO;
+
+			[Bindable]
+			private var _goodsNode:GoodsBeanVO;
+
+			[Bindable]
+			private var commentCount:String;
+
+			[Bindable]
+			private var imageS:String;
+
+			[Bindable]
+			private var price:String;
+			
+			private var modelLocator:ModelLocator;
+
+			public function get goodsNode():GoodsBeanVO
+			{
+				return _goodsNode;
+
+			}
+
+			public function set goodsNode(value:GoodsBeanVO):void
+			{
+				_goodsNode = value;
+				price = "￥" + _goodsNode.goodsPrice.toFixed(2);
+				commentCount = "Already " + _goodsNode.commentCount + " people evaluated";
+				imageS = StaticTool.imageRoot + _goodsNode.goodsImage;
+
+			}
+			
+			protected function btnCancel_clickHandler(event:MouseEvent):void
+			{
+				dispatchEvent(new DynamicEvent("cancel_crash"));
+			}
+			
+			protected function btnCart_clickHandler(event:MouseEvent):void
+			{
+				dispatchEvent(new DynamicEvent("cart_crash"));
+			}
+			
+			protected function btnBuy_clickHandler(event:MouseEvent):void
+			{
+				Alert.show("Do you want to buy "+buyCount.value+"  "+_goodsNode.goodsUnit+"  "+_goodsNode.goodsName
+					+"？\ntotal ￥"+(buyCount.value*_goodsNode.goodsPrice).toFixed(2),"tip", Alert.OK | Alert.CANCEL, null, buyGoodConfirmation);
+			}
+			
+			private function buyGoodConfirmation(event:CloseEvent):void{
+				if(event.detail == Alert.OK){
+					var gb:GoodsBeanVO = ObjectUtil.copy(_goodsNode) as GoodsBeanVO;
+					gb.goodsCount = buyCount.value;
+					modelLocator = ModelLocator.newInstance();
+					modelLocator.cartList.addItem(gb);
+				}
+			}
+			
+			protected function btnComment_clickHandler(event:MouseEvent):void
+			{
+				modelLocator = ModelLocator.newInstance();
+				if(modelLocator.currentAccount==null){
+					dispatchEvent(new DynamicEvent("loginn"));
+				}else{
+					if(StringUtil.trim(txtAdvantage.text) == ""){
+						Alert.show("please input the advantage","tip");
+						return ;
+					}
+					if(StringUtil.trim(txtDisadvantage.text) == ""){
+						Alert.show("please input the disadvantage","tip");
+						return ;
+					}
+					if(StringUtil.trim(txtContent.text) == ""){
+						Alert.show("please input the content","tip");
+						return ;
+					}
+					var e:DynamicEvent = new DynamicEvent("comment");
+					var it:CommentVO = new CommentVO();
+					it.advantage = txtAdvantage.text;
+					it.disadvantage = txtDisadvantage.text;
+					it.goodsId = _goodsNode.goodsId;
+					it.content = txtContent.text;
+					it.userName = ModelLocator.newInstance().currentAccount;
+					e.data = it;
+					dispatchEvent(e);
+				}
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:DateFormatter id="dateFormatter" formatString="YYYY-MM-DD HH:NN:SS"/>
+	<mx:Panel layout="vertical"
+			  width="100%"
+			  borderStyle="solid"
+			  paddingBottom="5"
+			  headerHeight="0">
+		<mx:HBox width="100%">
+			<mx:Box borderStyle="solid">
+				<mx:Image height="200"
+						  id="dataImage"
+						  source="{imageS}"
+						  width="200"
+						  maintainAspectRatio="false"
+						  scaleContent="true"/>
+			</mx:Box>
+			<mx:VBox width="100%" paddingTop="5">
+				<mx:Label text="{_goodsNode.goodsName}" fontSize="16" fontWeight="bold"/>
+				<mx:HRule width="90%"/>
+				<mx:HBox width="100%" verticalAlign="bottom">
+					<mx:Form>
+						<mx:FormItem label="Good Number:">
+							<mx:Label text="{_goodsNode.goodsId}"/>
+						</mx:FormItem>
+						<mx:FormItem label="Good Price:">
+							<mx:Label text="{price}" color="#FF0000" fontWeight="bold"/>
+						</mx:FormItem>
+						<mx:FormItem label="Good Score:">
+							<mx:Label text="{_goodsNode.averageScore}"/>
+						</mx:FormItem>
+						<mx:FormItem label="Owner name:">
+							<mx:Label text="{_goodsNode.merName}"/>
+						</mx:FormItem>
+						<mx:FormItem label="BUY Count:" direction="horizontal" horizontalGap="0" verticalCenter="0">
+							<mx:NumericStepper id="buyCount" value="1" minimum="1" maximum="{_goodsNode.goodsCount}"/>
+							<mx:Label text="(repertory:{_goodsNode.goodsCount+'/'+_goodsNode.goodsUnit})"/>
+						</mx:FormItem>
+					</mx:Form>
+					<mx:Button height="40" label="BUY" click="btnBuy_clickHandler(event)" minWidth="80"/>
+					<mx:Button height="40" label="CANCEL" click="btnCancel_clickHandler(event)" minWidth="80"/>
+					<mx:Button height="40" label="to my Cart" click="btnCart_clickHandler(event)" minWidth="80"
+							   visible="{ModelLocator.newInstance().type != 'role2'}"/>
+				</mx:HBox>
+			</mx:VBox>
+		</mx:HBox>
+		<mx:HBox width="100%" borderSides="top" borderStyle="solid">
+			<mx:Label text="description:" color="#FF0000" fontWeight="bold"/>
+			<mx:Text text="{_goodsNode.goodsDes}" width="100%" fontSize="14"/>
+		</mx:HBox>
+		<mx:HBox width="100%" borderSides="top" borderStyle="solid">
+			<mx:Label text="detail:" color="#FF0000" fontWeight="bold"/>
+			<mx:Text text="{_goodsNode.goodsInfo}" width="100%" fontSize="14"/>
+		</mx:HBox>
+	</mx:Panel>
+	<mx:Repeater id="rp1">
+		<mx:Panel layout="vertical"
+				  width="100%"
+				  borderStyle="solid"
+				  verticalGap="0"
+				  title="{'commenter：'+rp1.currentItem.userName+'|'+rp1.currentItem.score}">
+			<mx:Form width="100%" verticalGap="0">
+				<mx:FormItem label="advantage：" width="100%" fontSize="14">
+					<mx:Text text="{rp1.currentItem.advantage}" width="100%" fontSize="14"/>
+				</mx:FormItem>
+				<mx:FormItem label="disadvantage：" width="100%" fontSize="14">
+					<mx:Text text="{rp1.currentItem.disadvantage}" width="100%" fontSize="14"/>
+				</mx:FormItem>
+				<mx:FormItem label="content：" width="100%" fontSize="14">
+					<mx:Text text="{rp1.currentItem.content}" width="100%" fontSize="14"/>
+				</mx:FormItem>
+			</mx:Form>
+			<mx:Label text="{dateFormatter.format(rp1.currentItem.commentTime)}" width="100%" textAlign="right"/>
+		</mx:Panel>
+	</mx:Repeater>
+	<mx:Panel layout="vertical"
+			  width="100%"
+			  borderStyle="solid"
+			  verticalGap="0"
+			  horizontalAlign="right"
+			  title="please leave your comment">
+		<mx:Form width="100%" verticalGap="0">
+			<mx:FormItem label="advantage：" width="100%" fontSize="14">
+				<mx:TextInput id="txtAdvantage" width="100%" fontSize="14"/>
+			</mx:FormItem>
+			<mx:FormItem label="disadvantage：" width="100%" fontSize="14">
+				<mx:TextInput id="txtDisadvantage" width="100%" fontSize="14"/>
+			</mx:FormItem>
+			<mx:FormItem label="content：" width="100%" fontSize="14">
+				<mx:TextArea id="txtContent" width="100%" fontSize="14"/>
+			</mx:FormItem>
+		</mx:Form>
+		<mx:Button id="btnComment" label="commit" click="btnComment_clickHandler(event)"/>
+	</mx:Panel>
+</mx:VBox>

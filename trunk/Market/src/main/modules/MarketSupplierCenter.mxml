@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml"
+		   height="100%"
+		   layout="vertical"
+		   width="100%"
+		   creationComplete="supplier_creationCompleteHandler(event)"
+		   paddingLeft="100"
+		   paddingRight="100">
+	<mx:Script>
+		<![CDATA[
+			import main.modules.marketSupplierCenter.MarketSupplierCenterController;
+			
+			import vo.RecordsVO;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.managers.CursorManager;
+			import mx.rpc.AsyncResponder;
+			import mx.rpc.AsyncToken;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.remoting.RemoteObject;
+			import mx.utils.StringUtil;
+			
+			import util.ModelLocator;
+			
+			import vo.AccountVO;
+			import vo.GoodsBeanVO;
+			import vo.OrderListVO;
+
+			public var controller:MarketSupplierCenterController;
+
+			[Bindable]
+			public var basicInfo:AccountVO;
+
+			private var file:FileReference;
+			
+			private var remoteObject:RemoteObject;
+
+			private var byteArray:ByteArray;
+
+			private var bitmapData:BitmapData;
+
+			private var loader:Loader = new Loader();
+
+			[Bindable]
+			private var cmbType:ArrayCollection = new ArrayCollection([{name: "Vegetables",
+					value: "00010001"}, {name: "Fruits", value: "00020002"}, {name: "Grain",
+					value: "00030003"}, {name: "Bean Products", value: "00040004"}, {name: "Wheat",
+					value: "00050005"}, {name: "Meat", value: "00060006"}]);
+
+			[Bindable]
+			private var cmb2AC:ArrayCollection = new ArrayCollection(["All", "Waiting for payment",
+				"The buyer has to pay", "The seller has shipped", "Transaction has completed"]);
+
+			protected function supplier_creationCompleteHandler(event:FlexEvent):void
+			{
+				controller = new MarketSupplierCenterController(this);
+				Security.allowDomain("*");
+				file = new FileReference();
+				file.addEventListener(Event.COMPLETE, fileReferenceCompleteHandler);
+				file.addEventListener(Event.SELECT, fileReferenceSelectHandler);
+				initRemoteObject();
+			}
+
+			//选择上传的图片  
+			private function choose():void
+			{
+				var imageTypes:FileFilter = new FileFilter("Images (*.jpg)", "*.jpg;");
+				var allTypes:Array = new Array(imageTypes);
+				file.browse(allTypes);
+			}
+
+			private function toUpload():void
+			{
+				if(StringUtil.trim(txtName.text)==""){
+					Alert.show("please input the goodsName.","tip");
+					return;
+				}
+				if(txtType.selectedIndex==-1){
+					Alert.show("please input the goodsType.","tip");
+					return;
+				}
+				if(txtPrice.value==0){
+					Alert.show("please input the goodsPrice.","tip");
+					return;
+				}
+				if(txtCount.value==0){
+					Alert.show("please input the goodsCount.","tip");
+					return;
+				}
+				if(StringUtil.trim(txtDes.text)==""){
+					Alert.show("please input the goodsDescription.","tip");
+					return;
+				}
+				if(StringUtil.trim(txtInfo.text)==""){
+					Alert.show("please input the goodsInfomation.","tip");
+					return;
+				}
+				if(bitmapData == null)
+				{
+					Alert.show("please select the upload image first.");
+					return;
+				}
+				Alert.show("upload " + file.name + " (total " + Math.round(file.size) + " B)?",
+					"yes", Alert.YES | Alert.NO, null, proceedWithUpload);
+			}
+
+			//监听文件上传状态  
+			private function onProgress(e:ProgressEvent):void
+			{
+				lbProgress.text = " already upload " + e.bytesLoaded + " B，total " + e.bytesTotal
+					+ " B";
+				var proc:uint = e.bytesLoaded / e.bytesTotal * 100;
+				bar.setProgress(proc, 100);
+				bar.label = "current progress: " + " " + proc + "%";
+				if(e.bytesLoaded == e.bytesTotal)
+				{
+					CursorManager.removeBusyCursor();
+				}
+			}
+			
+			//初始化远程bean对象
+			private function initRemoteObject():void
+			{
+				remoteObject = new RemoteObject();
+				remoteObject.destination = "facade";
+				remoteObject.showBusyCursor = true;
+			}
+
+			//上传图片到服务器  
+			private function proceedWithUpload(e:CloseEvent):void
+			{
+				if(e.detail == Alert.YES)
+				{
+					var good:GoodsBeanVO = new GoodsBeanVO();
+					good.goodsName = txtName.text;
+					good.goodsType = txtType.selectedItem.value;
+					good.goodsPrice = txtPrice.value;
+					good.goodsDes = txtDes.text;
+					good.goodsInfo = txtInfo.text;
+					good.goodsCount = txtCount.value;
+					var token:AsyncToken = remoteObject.uploadGood(file.data,good,ModelLocator.newInstance().currentAccount);
+					token.addResponder(new AsyncResponder(function(event:ResultEvent, token:AsyncToken):void
+					{
+						if(event.result == true){
+							Alert.show("Add good success","tip");
+						}else{
+							
+						}
+					}, onRemoteFaultHandler));
+				}
+			}
+			
+			//远程调用出错，弹出栈信息
+			private function onRemoteFaultHandler(e:FaultEvent, token:AsyncToken):void
+			{
+				Alert.show(e.message.toString());
+			}
+
+			//上传完成调用  
+			private function completeHandle(event:Event):void
+			{
+				Alert.show("congratulations,Uploaded successfully!");
+			}
+
+			//载入本地图片  
+			private function fileReferenceCompleteHandler(e:Event):void
+			{
+				byteArray = file.data;
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderCompleteHandler);
+				loader.loadBytes(byteArray);
+			}
+
+			//图片载入完成显示在预览框中  
+			private function loaderCompleteHandler(e:Event):void
+			{
+				var bitmap:Bitmap = Bitmap(loader.content);
+				bitmapData = bitmap.bitmapData;
+				img.source = bitmap;
+			}
+
+			//选择文件动作监听  
+			private function fileReferenceSelectHandler(e:Event):void
+			{
+				file.removeEventListener(ProgressEvent.PROGRESS, onProgress);
+				file.load();
+			}
+
+			protected function basicInfoM_clickHandler(event:MouseEvent):void
+			{
+				if(btnm.label == "Modify")
+				{
+					form1Enable(true);
+					btnm.label = "Save";
+					btnc.enabled = true;
+				}
+				else if(btnm.label == "Save")
+				{
+					basicInfo.email = txtem.text;
+					basicInfo.realName = txtrn.text;
+					basicInfo.phone = txtp.text;
+					basicInfo.identityNumber = txtin.text;
+					controller.saveBasicInfo(basicInfo);
+					form1Enable(false);
+					btnm.label = "Modify";
+					btnc.enabled = false;
+				}
+			}
+
+			private function orderStatus(item:Object, column:DataGridColumn):String
+			{
+				var good:OrderListVO = item as OrderListVO;
+				var result:String;
+				switch(good.orderStatus)
+				{
+					case "0":
+						result = "Waiting for payment";
+						break;
+					case "1":
+						result = "The buyer has to pay";
+						break;
+					case "2":
+						result = "The seller has shipped";
+						break;
+					case "3":
+						result = "Transaction has completed";
+						break;
+				}
+				return result;
+			}
+
+			private function total(item:Object, column:DataGridColumn):String
+			{
+				var good:OrderListVO = item as OrderListVO;
+				var result:String;
+				result = Number(good.total).toFixed(2);
+				return result;
+			}
+
+			private function totalTip(item:Object):String
+			{
+				return total(item, null);
+			}
+
+			private function orderStatusTip(item:Object):String
+			{
+				return orderStatus(item, null);
+			}
+
+			private function totalPrice(item:Object, column:DataGridColumn):String
+			{
+				var good:GoodsBeanVO = item as GoodsBeanVO;
+				var result:String;
+				result = (good.goodsPrice * good.goodsCount).toFixed(2);
+				return result;
+			}
+
+			private function goodsPrice(item:Object, column:DataGridColumn):String
+			{
+				var good:GoodsBeanVO = item as GoodsBeanVO;
+				var result:String;
+				result = (good.goodsPrice).toFixed(2);
+				return result;
+			}
+
+			private function goodsPriceTip(item:Object):String
+			{
+				return goodsPrice(item, null);
+			}
+
+			private function totalPriceTip(item:Object):String
+			{
+				return totalPrice(item, null);
+			}
+
+			protected function basicInfoC_clickHandler(event:MouseEvent):void
+			{
+				resetBasicInfo(basicInfo);
+				form1Enable(false);
+				btnm.label = "Modify";
+				btnc.enabled = false;
+			}
+
+			private function form1Enable(e:Boolean):void
+			{
+				fi1.enabled = e;
+				fi2.enabled = e;
+				fi3.enabled = e;
+				fi4.enabled = e;
+			}
+
+			public function resetBasicInfo(e:AccountVO):void
+			{
+				txtrn.text = e.realName;
+				txtin.text = e.identityNumber;
+				txtem.text = e.email;
+				txtp.text = e.phone;
+			}
+
+			protected function order_changeHandler(event:ListEvent):void
+			{
+				controller.search();
+			}
+			
+			public function resetDate(item:OrderListVO,d:Date):void{
+				item.record.recordsTime = d;
+				item.record.remark = "2";
+			}
+			
+			public function saveDate(item:RecordsVO):void{
+				controller.saveDate(item);
+			}
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%">
+		<mx:HBox width="100%" borderSides="bottom" borderStyle="solid">
+			<mx:Label text="MY Market" fontWeight="bold"/>
+		</mx:HBox>
+		<mx:HBox width="100%">
+			<mx:VBox width="150" borderStyle="solid">
+				<mx:Button height="25"
+						   label="Goods Center"
+						   width="100%"
+						   click="{vb1.includeInLayout = (vb1.includeInLayout)?false:true;
+						   vb1.visible = (vb1.visible)?false:true}"
+						   fontSize="14"/>
+				<mx:VBox id="vb1" paddingLeft="20" paddingTop="8">
+					<mx:LinkButton id="btn1" label="My Goods" click="{vs.selectedIndex = 0}"/>
+					<mx:LinkButton id="btn3" label="About Me" click="{vs.selectedIndex = 1}"/>
+					<mx:LinkButton label="Add Goods" click="{vs.selectedIndex = 2}"/>
+				</mx:VBox>
+				<mx:Button height="25"
+						   label="Service Center"
+						   width="100%"
+						   click="{vb2.includeInLayout = (vb2.includeInLayout)?false:true;
+						   vb2.visible = (vb2.visible)?false:true}"
+						   fontSize="14"/>
+				<mx:VBox id="vb2" label="Order Center2" paddingLeft="20" paddingTop="8">
+					<mx:LinkButton id="btn4" label="My Order2" click="{vs.selectedIndex = 0}"/>
+					<mx:LinkButton id="btn6" label="About Me2" click="{vs.selectedIndex = 1}"/>
+					<mx:LinkButton label="Add Goods2" click="{vs.selectedIndex = 2}"/>
+					<mx:LinkButton id="btn10" label="My Order3" click="{vs.selectedIndex = 0}"/>
+					<mx:LinkButton id="btn12" label="About Me3" click="{vs.selectedIndex = 1}"/>
+					<mx:LinkButton label="Add Goods3" click="{vs.selectedIndex = 2}"/>
+				</mx:VBox>
+				<mx:Button height="25"
+						   label="Help Center"
+						   width="100%"
+						   click="{vb3.includeInLayout = (vb3.includeInLayout)?false:true;
+						   vb3.visible = (vb3.visible)?false:true}"
+						   fontSize="14"/>
+				<mx:VBox id="vb3" label="Order Center3" paddingLeft="20" paddingTop="8">
+					<mx:LinkButton id="btn7" label="My Order4" click="{vs.selectedIndex = 0}"/>
+					<mx:LinkButton id="btn8" label="About Me4" click="{vs.selectedIndex = 1}"/>
+					<mx:LinkButton label="Add Goods4" click="{vs.selectedIndex = 2}"/>
+				</mx:VBox>
+			</mx:VBox>
+			<mx:ViewStack creationPolicy="all" id="vs" width="100%" resizeToContent="true">
+				<mx:VBox width="100%">
+					<mx:HBox width="100%" borderSides="bottom" borderStyle="solid" borderThickness="2">
+						<mx:Label text="Order Center" color="#FF0000" fontSize="16" fontWeight="bold"/>
+					</mx:HBox>
+					<mx:VBox width="100%" verticalGap="0">
+						<mx:VBox width="100%" borderStyle="solid">
+							<mx:HBox width="100%"
+									 paddingLeft="15"
+									 paddingRight="15"
+									 paddingTop="8"
+									 verticalAlign="middle">
+								<mx:Label text="Order Status:"/>
+								<mx:ComboBox dataProvider="{cmb2AC}" id="cmb2" change="order_changeHandler(event)"/>
+								<mx:Spacer width="100%"/>
+							</mx:HBox>
+							<mx:DataGrid id="dg1" width="100%">
+								<mx:columns>
+									<mx:DataGridColumn headerText="Time of delivery" width="220">
+										<mx:itemRenderer>
+											<mx:Component>
+												<mx:HBox width="100%" verticalAlign="middle" horizontalGap="0">
+													<mx:Script>
+														<![CDATA[
+															import mx.events.CalendarLayoutChangeEvent;
+															import mx.formatters.DateFormatter;
+															
+															import vo.OrderListVO;
+															import vo.RecordsVO;
+															
+															private function disDay(item:Object):Array{
+																switch((item as OrderListVO).record.recordsType){
+																	case "-1":
+																		return [];
+																	case "0":
+																		return [1,2,3,4,5];
+																	case "1":
+																		return [0,6];
+																		break;
+																}
+																return [];
+															}
+															private function setDate(item:Object):Date{
+																if((item as OrderListVO).record.remark == "0"){
+																	return null;
+																}else{
+																	return (item as OrderListVO).record.recordsTime;
+																}
+															}
+															
+															protected function df_changeHandler(event:CalendarLayoutChangeEvent):void
+															{
+																outerDocument.resetDate((data as OrderListVO),df.selectedDate);
+															}
+															
+															protected function button1_clearHandler(event:Event):void
+															{
+																outerDocument.saveDate(data.record as RecordsVO);
+															}
+															
+														]]>
+													</mx:Script>
+													<mx:Canvas width="15">
+														<mx:DateField id="df" x="-63" disabledDays="{disDay(data)}" change="df_changeHandler(event)" selectedDate="{setDate(data)}" enabled="{(data as OrderListVO).record.remark != '1'}" formatString="YYYY/MM/DD"/>
+													</mx:Canvas>
+													<mx:Label text="{(data.record.remark=='0')
+															  ?'请选择'
+															  :DateField.dateToString((data.record.recordsTime as Date),'YYYY/MM/DD')}"/>
+													<mx:HBox width="100%" horizontalAlign="right" verticalAlign="middle">
+														<mx:Label text="{data.record.recordsNumber == 0?'All Day':'After 18:00'}"/>
+														<mx:Button label="确认" right="0" click="button1_clearHandler(event)" enabled="{data.record.remark=='2'}"/>
+													</mx:HBox>
+												</mx:HBox>
+											</mx:Component>
+										</mx:itemRenderer>
+									</mx:DataGridColumn>
+									<mx:DataGridColumn textAlign="center"
+													   dataField="receiveName"
+													   dataTipField="receiveName"
+													   headerText="Consignee"
+													   showDataTips="true"/>
+									<mx:DataGridColumn labelFunction="total"
+													   textAlign="center"
+													   width="100"
+													   dataTipFunction="totalTip"
+													   headerText="Order Amount"
+													   showDataTips="true"/>
+									<mx:DataGridColumn textAlign="center"
+													   dataField="orderTime"
+													   dataTipField="orderTime"
+													   headerText="Order Time"
+													   showDataTips="true"/>
+									<mx:DataGridColumn labelFunction="orderStatus"
+													   textAlign="center"
+													   dataTipFunction="orderStatusTip"
+													   headerText="Order Status"
+													   showDataTips="true"/>
+									<mx:DataGridColumn headerText="Operation" width="150">
+										<mx:itemRenderer>
+											<mx:Component>
+												<mx:HBox width="100%" horizontalAlign="center">
+													<mx:Script>
+														<![CDATA[
+															import mx.controls.Alert;
+															import mx.events.CloseEvent;
+															import vo.OrderListVO;
+
+															private function labelFun(o:Object):String
+															{
+																var ls:String;
+																switch((o as OrderListVO).
+																		orderStatus)
+																{
+																	case "0":
+																		ls = "Waiting for payment";
+																		break;
+																	case "1":
+																		ls = "Confirm delivery";
+																		break;
+																	case "2":
+																		ls = "Shipped";
+																		break;
+																	case "3":
+																		ls = "Completed";
+																		break;
+																}
+																return ls;
+
+															}
+
+															private function okConfirmation(event:CloseEvent):void
+															{
+																if(event.detail == Alert.OK)
+																{
+																	outerDocument.controller.
+																		confirmDelivery((data
+																		as OrderListVO).orderId);
+																}
+
+															}
+
+															protected function buy_clickHandler(event:MouseEvent):void
+															{
+																Alert.show("Confirm delivery？",
+																	"tip", Alert.OK | Alert.
+																	CANCEL, null, okConfirmation);
+
+															}
+														]]>
+													</mx:Script>
+													<mx:Button enabled="{data.orderStatus=='1'}" label="{labelFun(data)}" click="buy_clickHandler(event)"/>
+												</mx:HBox>
+											</mx:Component>
+										</mx:itemRenderer>
+									</mx:DataGridColumn>
+								</mx:columns>
+							</mx:DataGrid>
+						</mx:VBox>
+						<mx:HBox width="100%"
+								 borderSides="bottom-left-right"
+								 borderStyle="solid"
+								 horizontalAlign="right"
+								 horizontalGap="0"
+								 verticalAlign="middle">
+							<mx:Label text="Without payment orders:"/>
+							<mx:Label text="0" color="#FF0000" fontSize="14" fontWeight="bold"/>
+							<mx:Label text="Open orders:"/>
+							<mx:Label text="0" color="#FF0000" fontSize="14" fontWeight="bold"/>
+							<mx:Label text="Canceled orders:"/>
+							<mx:Label text="0" color="#FF0000" fontSize="14" fontWeight="bold"/>
+							<mx:Label text="Total orders:"/>
+							<mx:Label text="0" color="#FF0000" fontSize="14" fontWeight="bold"/>
+						</mx:HBox>
+					</mx:VBox>
+					<mx:VBox minHeight="300" width="100%" borderStyle="solid">
+						<mx:HBox width="100%" borderSides="bottom" borderStyle="solid">
+							<mx:Label text="Current Order:" color="#FF0000" fontSize="16" fontWeight="bold"/>
+							<mx:Label text="{dg1.selectedItem!=null?dg1.selectedItem.orderId:''}" color="#FF0000" fontSize="16" fontWeight="bold"/>
+						</mx:HBox>
+						<mx:HBox height="100%" width="100%">
+							<mx:DataGrid dataProvider="{dg1.selectedItem!=null?dg1.selectedItem.goodsList:new ArrayCollection()}"
+										 id="dg4"
+										 width="100%"
+										 rowHeight="60"
+										 wordWrap="true">
+								<mx:columns>
+									<mx:DataGridColumn width="25" textAlign="center" headerText="image">
+										<mx:itemRenderer>
+											<mx:Component>
+												<mx:Image height="40"
+														  source="{StaticTool.imageRoot+data.goodsImage}"
+														  width="40"
+														  maintainAspectRatio="false"
+														  scaleContent="true">
+													<mx:Script>
+														<![CDATA[
+															import util.StaticTool;
+														]]>
+													</mx:Script>
+												</mx:Image>
+											</mx:Component>
+										</mx:itemRenderer>
+									</mx:DataGridColumn>
+									<mx:DataGridColumn width="100"
+													   textAlign="center"
+													   dataField="goodsName"
+													   dataTipField="goodsName"
+													   headerText="goodsName"
+													   showDataTips="true"/>
+									<mx:DataGridColumn labelFunction="goodsPrice"
+													   width="60"
+													   textAlign="center"
+													   dataTipFunction="goodsPriceTip"
+													   headerText="unit-price"
+													   showDataTips="true"/>
+									<mx:DataGridColumn width="40"
+													   textAlign="center"
+													   dataField="goodsCount"
+													   dataTipField="goodsCount"
+													   headerText="goodsCount"
+													   showDataTips="true"/>
+									<mx:DataGridColumn labelFunction="totalPrice"
+													   width="60"
+													   textAlign="center"
+													   dataTipFunction="totalPriceTip"
+													   headerText="total-Price"
+													   showDataTips="true"/>
+								</mx:columns>
+							</mx:DataGrid>
+						</mx:HBox>
+					</mx:VBox>
+				</mx:VBox>
+				<mx:VBox width="100%" verticalGap="0">
+					<mx:Panel height="100%"
+							  width="100%"
+							  color="#FF0000"
+							  dropShadowEnabled="false"
+							  fontSize="14"
+							  title="basicInfomation">
+						<mx:Form id="f01">
+							<mx:FormItem enabled="false" id="fi1" label="realName:">
+								<mx:TextInput id="txtrn" text="{basicInfo.realName}"/>
+							</mx:FormItem>
+							<mx:FormItem enabled="false" id="fi2" label="identityNumber:">
+								<mx:TextInput id="txtin" maxChars="18" text="{basicInfo.identityNumber}" restrict="0-9"/>
+							</mx:FormItem>
+							<mx:FormItem enabled="false" id="fi3" label="email:">
+								<mx:TextInput id="txtem" text="{basicInfo.email}"/>
+							</mx:FormItem>
+							<mx:FormItem enabled="false" id="fi4" label="phone:">
+								<mx:TextInput id="txtp" maxChars="11" text="{basicInfo.phone}" restrict="0-9"/>
+							</mx:FormItem>
+							<mx:HBox width="100%" horizontalAlign="right">
+								<mx:Button id="btnm" label="Modify" click="basicInfoM_clickHandler(event)"/>
+								<mx:Button enabled="false" id="btnc" label="Cancel" click="basicInfoC_clickHandler(event)"/>
+							</mx:HBox>
+						</mx:Form>
+					</mx:Panel>
+				</mx:VBox>
+				<mx:VBox width="100%" verticalGap="0">
+					<mx:Panel height="100%"
+							  width="100%"
+							  color="#FF0000"
+							  dropShadowEnabled="false"
+							  paddingBottom="20"
+							  fontSize="14"
+							  title="Add my Goods">
+						<mx:HBox width="100%">
+							<mx:VBox height="100%">
+								<mx:Form height="100%">
+									<mx:FormItem label="goodsName:">
+										<mx:TextInput id="txtName"/>
+									</mx:FormItem>
+									<mx:FormItem label="goodsType:">
+										<mx:ComboBox id="txtType" labelField="name" dataProvider="{cmbType}"/>
+									</mx:FormItem>
+									<mx:FormItem label="goodsPrice:">
+										<mx:HBox>
+											<mx:NumericStepper id="txtPrice"/>
+											<mx:Label text="￥"/>
+										</mx:HBox>
+									</mx:FormItem>
+									<mx:FormItem label="goodsCount:">
+										<mx:HBox>
+											<mx:NumericStepper id="txtCount"/>
+											<mx:Label text="per"/>
+										</mx:HBox>
+									</mx:FormItem>
+									<mx:FormItem label="goodsDescription:">
+										<mx:TextInput id="txtDes" width="100%" maxChars="256"/>
+									</mx:FormItem>
+									<mx:FormItem label="goodsInfomation:" height="100%">
+										<mx:TextArea id="txtInfo" width="100%" maxChars="512"
+													 height="100%"/>
+									</mx:FormItem>
+								</mx:Form>
+							</mx:VBox>
+							<mx:VBox horizontalAlign="center"
+									 verticalGap="0">
+								<mx:Label id="lbProgress" text="upload"/>
+								<mx:ProgressBar direction="right"
+												id="bar"
+												label="当前进度: 0%"
+												labelPlacement="bottom"
+												maximum="100"
+												minimum="0"
+												mode="manual"
+												width="200"
+												themeColor="#F20D7A"
+												visible="true"/>
+								<mx:HBox>
+									<mx:Button label="选择文件" click="choose()"/>
+									<mx:Button label="提交商品" click="toUpload()"/>
+								</mx:HBox>
+								<mx:Image height="200"
+										  id="img"
+										  width="200"
+										  maintainAspectRatio="false"
+										  scaleContent="true"/>
+							</mx:VBox>
+						</mx:HBox>
+					</mx:Panel>
+				</mx:VBox>
+			</mx:ViewStack>
+		</mx:HBox>
+		<mx:HBox minHeight="100" width="100%" borderStyle="solid">
+		</mx:HBox>
+	</mx:VBox>
+</mx:Module>

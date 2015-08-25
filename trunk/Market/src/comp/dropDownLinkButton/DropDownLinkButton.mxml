@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="this_creationCompleteHandler(event)" backgroundAlpha="0">
+	<mx:Script>
+		<![CDATA[
+			import comp.dropDownLinkButton.dropDownPanel.DropDownPanel;
+			import flash.utils.setTimeout;
+			import mx.binding.utils.BindingUtils;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.Container;
+			import mx.events.DynamicEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			import mx.managers.PopUpManager;
+			import util.StaticTool;
+			import vo.TreeNodeVO_TypeChildren;
+
+			private var displayFlag:Boolean = false;
+
+			private var dropDownPanel:DropDownPanel;
+
+			[Bindable]
+			public var dataNode:TreeNodeVO_TypeChildren;
+
+			private function bindProvider(event:FlexEvent):void
+			{
+				BindingUtils.bindProperty(dropDownPanel.linkBar, "dataProvider", dataNode,
+					"children");
+				resizePopup();
+
+			}
+
+			private function resizeDispatch(e:ResizeEvent):void
+			{
+				resizePopup();
+
+			}
+
+			private function resizePopup():void
+			{
+				dropDownPanel.x = localToGlobal(new Point(this.width, this.height)).x - dropDownPanel.
+					width;
+				dropDownPanel.y = localToGlobal(new Point(this.width, this.height)).y;
+
+			}
+
+			private function setDropDownPanel():void
+			{
+				dropDownPanel = new DropDownPanel();
+				dropDownPanel.addEventListener(FlexEvent.CREATION_COMPLETE, bindProvider);
+				dropDownPanel.addEventListener(ResizeEvent.RESIZE, resizeDispatch);
+				dataNode = new TreeNodeVO_TypeChildren();
+
+			}
+
+			protected function HideDropDownPanel():void
+			{
+				if(displayFlag == false)
+				{
+					PopUpManager.removePopUp(dropDownPanel);
+				}
+				else
+				{
+					displayFlag = false;
+				}
+
+			}
+
+			protected function dispatchUrl(e:DynamicEvent):void
+			{
+				dispatchEvent(e);
+
+			}
+
+			protected function linkbutton1_clickHandler(event:MouseEvent):void
+			{
+				var e:DynamicEvent = new DynamicEvent(StaticTool.LINK)
+				e.data = dataNode.value;
+				dispatchEvent(e);
+
+			}
+
+			protected function linkbutton1_rollOverHandler(event:MouseEvent):void
+			{
+				displayFlag = true
+				setTimeout(offFlag, 100);
+				this.addEventListener(MouseEvent.ROLL_OUT, readyHideDropDownPanel);
+				dropDownPanel.addEventListener(MouseEvent.ROLL_OVER, onFlag);
+				dropDownPanel.addEventListener(MouseEvent.ROLL_OUT, readyHideDropDownPanel);
+				dropDownPanel.addEventListener(StaticTool.LINK, dispatchUrl);
+				resizePopup();
+				PopUpManager.addPopUp(dropDownPanel, this);
+
+			}
+
+			protected function offFlag():void
+			{
+				displayFlag = false;
+
+			}
+
+			protected function onFlag(e:MouseEvent):void
+			{
+				displayFlag = true;
+
+			}
+
+			protected function readyHideDropDownPanel(e:MouseEvent):void
+			{
+				setTimeout(HideDropDownPanel, 50);
+
+			}
+
+			protected function this_creationCompleteHandler(event:FlexEvent):void
+			{
+				setDropDownPanel();
+
+			}
+		]]>
+	</mx:Script>
+	<mx:LinkButton height="100%"
+				   id="btn"
+				   label="{dataNode.label}"
+				   width="100%"
+				   click="linkbutton1_clickHandler(event)"
+				   rollOver="linkbutton1_rollOverHandler(event)"
+				   textDecoration="none"/>
+
+</mx:Canvas>

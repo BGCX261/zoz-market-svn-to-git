@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml"
+		   height="100%"
+		   layout="vertical"
+		   width="100%"
+		   creationComplete="marketPersonCenter_creationCompleteHandler(event)"
+		   paddingLeft="100"
+		   paddingRight="100">
+	<mx:Script>
+		<![CDATA[
+			import main.modules.marketPersonCenter.MarketPersonCenterController;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			
+			import util.ModelLocator;
+			
+			import vo.AccountVO;
+			import vo.AddressVO;
+			import vo.GoodsBeanVO;
+			import vo.OrderListVO;
+
+			[Bindable]
+			private var cmb2AC:ArrayCollection = new ArrayCollection(["All","Pending payment"
+				, "Waiting for delivery","The seller has shipped","Transaction has completed"]);
+
+			public var controller:MarketPersonCenterController;
+
+			[Bindable]
+			public var basicInfo:AccountVO;
+			
+			[Bindable]
+			public var currentAddr:AddressVO;
+
+			protected function marketPersonCenter_creationCompleteHandler(event:FlexEvent):void
+			{
+				controller = new MarketPersonCenterController(this);
+				StyleManager.getStyleDeclaration("ToolTip").setStyle("fontSize",14);
+			}
+			
+			protected function basicInfoM_clickHandler(event:MouseEvent):void
+			{
+				if(btnm.label == "Modify"){
+					form1Enable(true);
+					btnm.label = "Save";
+					btnc.enabled = true;
+				}else if(btnm.label == "Save"){
+					basicInfo.email = txtem.text;
+					basicInfo.realName = txtrn.text;
+					basicInfo.phone = txtp.text;
+					basicInfo.identityNumber = txtin.text;
+					controller.saveBasicInfo(basicInfo);
+					
+					form1Enable(false);
+					btnm.label = "Modify";
+					btnc.enabled = false;
+				}
+				
+			}
+			
+			protected function basicInfoC_clickHandler(event:MouseEvent):void
+			{
+				resetBasicInfo(basicInfo);
+				form1Enable(false);
+				btnm.label = "Modify";
+				btnc.enabled = false;
+			}
+			
+			public function toMyCart():void{
+				if(vs == null){
+					this.addEventListener(FlexEvent.CREATION_COMPLETE,toCart);
+				}else{
+					vs.selectedIndex = 1;
+				}
+			}
+			
+			private function toCart(event:FlexEvent):void{
+				vs.selectedIndex = 1;
+			}
+			
+			private function form1Enable(e:Boolean):void{
+				fi1.enabled = e;
+				fi2.enabled = e;
+				fi3.enabled = e;
+				fi4.enabled = e;
+			}
+			
+			public function resetBasicInfo(e:AccountVO):void{
+				txtrn.text = e.realName;
+				txtin.text = e.identityNumber;
+				txtem.text = e.email;
+				txtp.text = e.phone;
+			}
+			
+			protected function btnn2_clickHandler(event:MouseEvent):void
+			{
+				if(btnn2.label == "New"){
+					currentAddr = new AddressVO();
+					
+					btnn2.label = "Save";
+					btnc2.enabled = true;
+					btnm2.enabled = false;
+					btnd2.enabled = false;
+					dg2.selectedIndex = -1;
+					dg2.selectable = false;
+					form2Enable(true);
+				}else if(btnn2.label == "Save"){
+					btnn2.label = "New";
+					btnc2.enabled = false;
+					btnm2.enabled = true;
+					btnd2.enabled = true;
+					dg2.selectable = true;
+					
+					currentAddr.city = txt2c.text;
+					currentAddr.street = txt2da.text;
+					currentAddr.receiveName = txt2rn.text;
+					currentAddr.phone = txt2p.text;
+					currentAddr.zipCode = txt2zc.text;
+					currentAddr.deliveryType = "0";
+					currentAddr.payType = "0";
+					currentAddr.email = "ceshi@sina.com";
+					controller.saveCurrentAddr(currentAddr);
+					currentAddr = new AddressVO();
+					form2Enable(false);
+					//增加
+				}
+				
+			}
+			
+			protected function btnm2_clickHandler(event:MouseEvent):void
+			{
+				if(btnm2.label == "Modify"){
+					if(dg2.selectedIndex == -1){
+						Alert.show("please select one address","tip");
+						return;
+					}
+					btnm2.label = "Save";
+					btnc2.enabled = true;
+					btnn2.enabled = false;
+					btnd2.enabled = false;
+					dg2.selectable = false;
+					form2Enable(true);
+				}else if(btnm2.label == "Save"){
+					btnm2.label = "Modify";
+					btnc2.enabled = false;
+					btnn2.enabled = true;
+					btnd2.enabled = true;
+					dg2.selectable = true;
+					dg2.selectedIndex = -1;
+					
+					currentAddr.city = txt2c.text;
+					currentAddr.street = txt2da.text;
+					currentAddr.receiveName = txt2rn.text;
+					currentAddr.phone = txt2p.text;
+					currentAddr.zipCode = txt2zc.text;
+					currentAddr.deliveryType = "0";
+					currentAddr.email = "ceshi@sina.com";
+					controller.saveCurrentAddr(currentAddr);
+					currentAddr = new AddressVO();
+					form2Enable(false);
+					//修改
+				}
+				
+			}
+			
+			protected function btnd2_clickHandler(event:MouseEvent):void
+			{
+				if(dg2.selectedIndex == -1){
+					Alert.show("please select one address","tip");
+					return;
+				}
+				Alert.show("delete the address？","tip", Alert.OK | Alert.CANCEL, null, deleteRuleConfirmation);
+			}
+			
+			private function deleteRuleConfirmation(event:CloseEvent):void{
+				if(event.detail == Alert.OK){
+					controller.delAddr(dg2.selectedItem as AddressVO);
+					currentAddr = new AddressVO();
+				}
+			}
+			
+			protected function btnc2_clickHandler(event:MouseEvent):void
+			{
+				resetCurrentAddr(currentAddr);
+				btnm2.label = "Modify";
+				btnn2.label = "New";
+				btnc2.enabled = false;
+				btnn2.enabled = true;
+				btnm2.enabled = true;
+				btnd2.enabled = true;
+				dg2.selectable = true;
+				form2Enable(false);
+			}
+			
+			private function resetCurrentAddr(e:AddressVO):void{
+				txt2c.text = e.city;
+				txt2da.text = e.street;
+				txt2rn.text = e.receiveName;
+				txt2p.text = e.phone;
+				txt2zc.text = e.zipCode;
+			}
+			
+			private function form2Enable(e:Boolean):void{
+				fi5.enabled = e;
+				fi6.enabled = e;
+				fi7.enabled = e;
+				fi8.enabled = e;
+				fi9.enabled = e;
+			}
+			
+			private function totalPrice(item:Object, column:DataGridColumn):String{
+				var good:GoodsBeanVO = item as GoodsBeanVO;
+				var result:String;
+				result = (good.goodsPrice * good.goodsCount).toFixed(2);
+				return result;
+			}
+			
+			private function goodsPrice(item:Object, column:DataGridColumn):String{
+				var good:GoodsBeanVO = item as GoodsBeanVO;
+				var result:String;
+				result = (good.goodsPrice).toFixed(2);
+				return result;
+			}
+			
+			private function orderStatus(item:Object, column:DataGridColumn):String{
+				var good:OrderListVO = item as OrderListVO;
+				var result:String;
+				switch(good.orderStatus){
+					case "0":
+						result = "Pending payment";
+						break;
+					case "1":
+						result = "Waiting for delivery";
+						break;
+					case "2":
+						result = "The seller has shipped";
+						break;
+					case "3":
+						result = "Transaction has completed";
+						break;
+				}
+				return result;
+			}
+			
+			private function total(item:Object, column:DataGridColumn):String{
+				var good:OrderListVO = item as OrderListVO;
+				var result:String;
+				result = Number(good.total).toFixed(2);
+				return result;
+			}
+			
+			private function totalTip(item:Object):String{
+				return total(item,null);
+			}
+			
+			private function orderStatusTip(item:Object):String{
+				return orderStatus(item,null);
+			}
+			
+			private function goodsPriceTip(item:Object):String{
+				return goodsPrice(item,null);
+			}
+			
+			private function totalPriceTip(item:Object):String{
+				return totalPrice(item,null);
+			}
+			
+			protected function dg2_itemClickHandler(event:ListEvent):void
+			{
+				if(fi5.enabled == false){
+					currentAddr = dg2.selectedItem as AddressVO;
+				}
+			}
+			
+			private function RBG_label(v:AddressVO):String
+			{
+				var result:String = "ReceiverName:"+v.receiveName+" Address:"+v.city+v.street+" ZipCode:"+v.zipCode+"Phone:"+v.phone+" ";
+				return result;
+			}
+			
+			protected function toOrder_clickHandler(event:MouseEvent):void
+			{
+				controller.toOrder();
+			}
+			
+			protected function dg1_itemClickHandler(event:ListEvent):void
+			{
+				dg4.dataProvider = (dg1.selectedItem as OrderListVO).goodsList;
+			}
+			
+			protected function order_changeHandler(event:ListEvent):void
+			{
+				controller.search();
+			}
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%">
+		<mx:HBox width="100%" borderSides="bottom" borderStyle="solid">
+			<mx:Label text="MY Market" fontWeight="bold"/>
+		</mx:HBox>
+		<mx:HBox width="100%">
+			<mx:VBox width="150" borderStyle="solid">
+				<mx:Button height="25"
+						   label="Order Center"
+						   width="100%"
+						   click="{vb1.includeInLayout = (vb1.includeInLayout)?false:true;
+						   vb1.visible = (vb1.visible)?false:true}"
+						   fontSize="14"/>
+				<mx:VBox id="vb1" paddingLeft="20" paddingTop="8">
+					<mx:LinkButton id="btn1" label="My Order" click="{vs.selectedIndex = 0}"/>
+					<mx:LinkButton id="btn2" label="My Cart" click="{vs.selectedIndex = 1}"/>
+					<mx:LinkButton id="btn3" label="About Me" click="{vs.selectedIndex = 2}"/>
+				</mx:VBox>
+				<mx:Button height="25"
+						   label="Service Center"
+						   width="100%"
+						   click="{vb2.includeInLayout = (vb2.includeInLayout)?false:true;
+						   vb2.visible = (vb2.visible)?false:true}"
+						   fontSize="14"/>
+				<mx:VBox id="vb2" label="Order Center2" paddingLeft="20" paddingTop="8">
+					<mx:LinkButton id="btn4" label="My Order2" click="{vs.selectedIndex = 0}"/>
+					<mx:LinkButton id="btn5" label="My Cart2" click="{vs.selectedIndex = 1}"/>
+					<mx:LinkButton id="btn6" label="About Me2" click="{vs.selectedIndex = 2}"/>
+					<mx:LinkButton id="btn10" label="My Order3" click="{vs.selectedIndex = 0}"/>
+					<mx:LinkButton id="btn11" label="My Cart3" click="{vs.selectedIndex = 1}"/>
+					<mx:LinkButton id="btn12" label="About Me3" click="{vs.selectedIndex = 2}"/>
+				</mx:VBox>
+				<mx:Button height="25"
+						   label="Help Center"
+						   width="100%"
+						   click="{vb3.includeInLayout = (vb3.includeInLayout)?false:true;
+						   vb3.visible = (vb3.visible)?false:true}"
+						   fontSize="14"/>
+				<mx:VBox id="vb3" label="Order Center3" paddingLeft="20" paddingTop="8">
+					<mx:LinkButton id="btn7" label="My Order4" click="{vs.selectedIndex = 0}"/>
+					<mx:LinkButton id="btn8" label="My Cart4" click="{vs.selectedIndex = 1}"/>
+					<mx:LinkButton id="btn9" label="About Me4" click="{vs.selectedIndex = 2}"/>
+				</mx:VBox>
+			</mx:VBox>
+			<mx:ViewStack id="vs" width="100%" resizeToContent="true" creationPolicy="all">
+				<mx:VBox width="100%">
+					<mx:HBox width="100%" borderSides="bottom" borderStyle="solid" borderThickness="2">
+						<mx:Label text="Order Center" color="#FF0000" fontSize="16" fontWeight="bold"/>
+					</mx:HBox>
+					<mx:VBox width="100%" verticalGap="0">
+						<mx:VBox width="100%" borderStyle="solid">
+							<mx:HBox width="100%"
+									 paddingLeft="15"
+									 paddingRight="15"
+									 paddingTop="8"
+									 verticalAlign="middle">
+								<mx:Label text="Order Status:"/>
+								<mx:ComboBox id="cmb2" dataProvider="{cmb2AC}" change="order_changeHandler(event)"/>
+								<mx:Spacer width="100%"/>
+							</mx:HBox>
+							<mx:DataGrid id="dg1" width="100%">
+								<mx:columns>
+									<mx:DataGridColumn headerText="Time of delivery" width="220">
+										<mx:itemRenderer>
+											<mx:Component>
+												<mx:HBox width="100%" verticalAlign="middle" paddingLeft="10" paddingRight="10">
+													<mx:Script>
+														<![CDATA[
+															import mx.controls.DateField;
+															
+															import vo.OrderListVO;
+															
+															private function setLabel(ol:OrderListVO):String{
+																if(ol.record.remark == "0"){
+																	switch(ol.record.recordsType){
+																		case "-1":
+																			return "Every Day";
+																		case "0":
+																			return "Weekend Delivery";
+																		case "1":
+																			return "WorkingDays Delivery";
+																	}
+																	return "";
+																}else if(ol.record.remark == "1"){
+																	return "At "+DateField.dateToString(ol.record.recordsTime,"YYYY/MM/DD");
+																}
+																return "";
+															}
+														]]>
+													</mx:Script>
+													<mx:Label text="{setLabel(data as OrderListVO)}"/>
+													<mx:Spacer width="100%"/>
+													<mx:Label text="{(data as OrderListVO).record.recordsNumber==1?'-After 18:00':'-All Day'}"/>
+												</mx:HBox>
+											</mx:Component>
+										</mx:itemRenderer>
+									</mx:DataGridColumn>
+									<mx:DataGridColumn textAlign="center" headerText="Consignee" dataField="receiveName" showDataTips="true" dataTipField="receiveName"/>
+									<mx:DataGridColumn textAlign="center" width="100" headerText="Order Amount" labelFunction="total" showDataTips="true" dataTipFunction="totalTip"/>
+									<mx:DataGridColumn textAlign="center" headerText="Order Time" dataField="orderTime" showDataTips="true" dataTipField="orderTime"/>
+									<mx:DataGridColumn textAlign="center" headerText="Order Status" labelFunction="orderStatus" showDataTips="true" dataTipFunction="orderStatusTip"/>
+									<mx:DataGridColumn headerText="Operation" width="150">
+										<mx:itemRenderer>
+											<mx:Component>
+												<mx:HBox horizontalAlign="center" width="100%">
+													<mx:Script>
+														<![CDATA[
+															import mx.controls.Alert;
+															import mx.events.CloseEvent;
+															import vo.OrderListVO;
+															
+															private function labelFun(o:Object):String
+															{
+																var ls:String;
+																switch((o as OrderListVO).orderStatus){
+																	case "0":
+																		ls = "pay";
+																		break;
+																	case "1":
+																		ls = "The buyer has to pay";
+																		break;
+																	case "2":
+																		ls = "Confirm receipt";
+																		break;
+																	case "3":
+																		ls = "Completion";
+																		break;
+																}
+																return ls;
+															}
+															
+															private function okConfirmation(event:CloseEvent):void{
+																if(event.detail == Alert.OK){
+																	if(btn.label == "pay"){
+																		outerDocument.controller.payment((data as OrderListVO).orderId);
+																	}
+																	if(btn.label == "Confirm receipt"){
+																		outerDocument.controller.confirmReceipt((data as OrderListVO).orderId);
+																	}
+																}
+															}
+															
+															protected function buy_clickHandler(event:MouseEvent):void
+															{
+																if(event.currentTarget.label == "pay"){
+																	Alert.show("Confirm payment？total "+Number((data as OrderListVO).total).toFixed(2)+"￥"
+																		,"tip", Alert.OK | Alert.CANCEL, null, okConfirmation);
+																}
+																if(event.currentTarget.label == "Confirm receipt"){
+																	Alert.show("Confirm receipt？","tip", Alert.OK | Alert.CANCEL, null, okConfirmation);
+																}
+															}
+															
+															protected function del_clickHandler(event:MouseEvent):void
+															{
+																outerDocument.controller.delOrder((data as OrderListVO).orderId);
+															}
+															
+														]]>
+													</mx:Script>
+													<mx:Button id="btn" label="{labelFun(data)}" click="buy_clickHandler(event)" enabled="{data.orderStatus=='0'||data.orderStatus=='2'}"/>
+													<mx:Button label="delete" visible="{data.orderStatus=='0'}" includeInLayout="{data.orderStatus=='0'}" click="del_clickHandler(event)"/>
+												</mx:HBox>
+											</mx:Component>
+										</mx:itemRenderer>
+									</mx:DataGridColumn>
+								</mx:columns>
+							</mx:DataGrid>
+						</mx:VBox>
+						<mx:HBox width="100%"
+								 borderSides="bottom-left-right"
+								 borderStyle="solid"
+								 horizontalAlign="right"
+								 horizontalGap="0"
+								 verticalAlign="middle">
+							<mx:Label text="Without payment orders:"/>
+							<mx:Label text="0" color="#FF0000" fontSize="14" fontWeight="bold"/>
+							<mx:Label text="Open orders:"/>
+							<mx:Label text="0" color="#FF0000" fontSize="14" fontWeight="bold"/>
+							<mx:Label text="Canceled orders:"/>
+							<mx:Label text="0" color="#FF0000" fontSize="14" fontWeight="bold"/>
+							<mx:Label text="Total orders:"/>
+							<mx:Label text="0" color="#FF0000" fontSize="14" fontWeight="bold"/>
+						</mx:HBox>
+					</mx:VBox>
+					<mx:VBox minHeight="300" width="100%" borderStyle="solid">
+						<mx:HBox width="100%" borderSides="bottom" borderStyle="solid">
+							<mx:Label text="Current Order:" color="#FF0000" fontSize="16" fontWeight="bold"/>
+							<mx:Label text="{dg1.selectedItem!=null?dg1.selectedItem.orderId:''}" color="#FF0000" fontSize="16" fontWeight="bold"/>
+						</mx:HBox>
+						<mx:HBox height="100%" width="100%">
+							<mx:DataGrid id="dg4" wordWrap="true" rowHeight="60" width="100%" dataProvider="{dg1.selectedItem!=null?dg1.selectedItem.goodsList:new ArrayCollection()}">
+								<mx:columns>
+									<mx:DataGridColumn textAlign="center" width="25" headerText="image">
+										<mx:itemRenderer>
+											<mx:Component>
+												<mx:Image height="40"
+														  source="{StaticTool.imageRoot+data.goodsImage}"
+														  width="40"
+														  maintainAspectRatio="false"
+														  scaleContent="true">
+													<mx:Script>
+														<![CDATA[
+															import util.StaticTool;
+														]]>
+													</mx:Script>
+												</mx:Image>
+												
+											</mx:Component>
+										</mx:itemRenderer>
+									</mx:DataGridColumn>
+									<mx:DataGridColumn textAlign="center" headerText="goodsName" width="100" dataField="goodsName" showDataTips="true" dataTipField="goodsName"/>
+									<mx:DataGridColumn textAlign="center" headerText="unit-price" width="60" labelFunction="goodsPrice" showDataTips="true" dataTipFunction="goodsPriceTip"/>
+									<mx:DataGridColumn textAlign="center" headerText="goodsCount" width="40" dataField="goodsCount" showDataTips="true" dataTipField="goodsCount"/>
+									<mx:DataGridColumn textAlign="center" headerText="total-Price" width="60" labelFunction="totalPrice" showDataTips="true" dataTipFunction="totalPriceTip"/>
+								</mx:columns>
+							</mx:DataGrid>
+						</mx:HBox>
+					</mx:VBox>
+				</mx:VBox>
+				<mx:VBox width="100%">
+					<mx:Panel height="100%"
+							  width="100%"
+							  color="#FF0000"
+							  fontSize="14"
+							  dropShadowEnabled="false"
+							  title="Cart">
+						<mx:Form id="f02" width="100%">
+							<mx:FormItem id="fi21" label="ReceiveAddress:" width="100%">
+								<mx:VBox width="100%">
+									<mx:RadioButtonGroup id="addrRBG"/>
+									<mx:Repeater id="rp1">
+										<mx:RadioButton groupName="addrRBG" label="{RBG_label(rp1.currentItem as AddressVO)}" value="{(rp1.currentItem as AddressVO).receiveAddrId}"/>
+									</mx:Repeater>
+								</mx:VBox>
+							</mx:FormItem>
+							<mx:FormItem id="fi22" label="Goods in Cart:" width="100%">
+								<mx:VBox width="100%">
+									<mx:DataGrid id="dg3" dataProvider="{ModelLocator.newInstance().cartList}" wordWrap="true" rowHeight="60" width="100%">
+										<mx:columns>
+											<mx:DataGridColumn textAlign="center" width="25" headerText="image">
+												<mx:itemRenderer>
+													<mx:Component>
+														<mx:Image height="40"
+																  source="{StaticTool.imageRoot+data.goodsImage}"
+																  width="40"
+																  maintainAspectRatio="false"
+																  scaleContent="true">
+															<mx:Script>
+																<![CDATA[
+																	import util.StaticTool;
+																]]>
+															</mx:Script>
+														</mx:Image>
+
+													</mx:Component>
+												</mx:itemRenderer>
+											</mx:DataGridColumn>
+											<mx:DataGridColumn textAlign="center" headerText="goodsName" width="100" dataField="goodsName" showDataTips="true" dataTipField="goodsName"/>
+											<mx:DataGridColumn textAlign="center" headerText="goodsPrice" width="60" labelFunction="totalPrice" showDataTips="true" dataTipFunction="totalPriceTip"/>
+											<mx:DataGridColumn textAlign="center" headerText="goodsCount" width="40" dataField="goodsCount" showDataTips="true" dataTipField="goodsCount"/>
+											<mx:DataGridColumn textAlign="center" headerText="unit-price" width="60" labelFunction="goodsPrice" showDataTips="true" dataTipFunction="goodsPriceTip"/>
+											<mx:DataGridColumn textAlign="center" width="40">
+												<mx:itemRenderer>
+													<mx:Component>
+														<mx:Box width="100%" height="100%" horizontalAlign="center">
+															<mx:Button label="delete" click="del_clickHandler(event)"/>
+															<mx:Script>
+																<![CDATA[
+																	import mx.collections.ArrayCollection;
+																	protected function del_clickHandler(event:MouseEvent):void
+																	{
+																		var i:int = (outerDocument.dg3.dataProvider as ArrayCollection).getItemIndex(data);
+																		(outerDocument.dg3.dataProvider as ArrayCollection).removeItemAt(i);
+																	}
+																]]>
+															</mx:Script>
+														</mx:Box>
+													</mx:Component>
+												</mx:itemRenderer>
+											</mx:DataGridColumn>
+										</mx:columns>
+									</mx:DataGrid>
+								</mx:VBox>
+							</mx:FormItem>
+							<mx:FormItem id="fi10" label="Delivery time:" width="100%">
+								<mx:HBox width="100%">
+									<mx:VBox width="30%">
+										<mx:RadioButtonGroup id="rbgTime" selectedValue="-1"/>
+										<mx:RadioButton id="everyDay" label="Every Day" value="-1" groupName="rbgTime"/>
+										<mx:RadioButton id="weekend" label="Weekend delivery" value="0" groupName="rbgTime"/>
+										<mx:RadioButton id="workingDays" label="WorkingDays delivery" value="1" groupName="rbgTime"/>
+										<mx:CheckBox id="ckbNight" fontWeight="bold" label="Only at Night(after 18:00)"/>
+									</mx:VBox>
+									<mx:Label text="PayType:"/>
+									<mx:VBox>
+										<mx:RadioButtonGroup id="rbgPayType" selectedValue="0"/>
+										<mx:RadioButton id="cash" label="Cash on delivery" value="0" groupName="rbgPayType"/>
+										<mx:RadioButton id="online" label="Online payment" value="1" groupName="rbgPayType"/>
+									</mx:VBox>
+								</mx:HBox>
+								
+							</mx:FormItem>
+						</mx:Form>
+						<mx:HBox width="100%" horizontalAlign="right" paddingRight="16">
+							<mx:Button label="To generate orders" click="toOrder_clickHandler(event)"/>
+						</mx:HBox>
+					</mx:Panel>
+				</mx:VBox>
+				<mx:VBox width="100%" verticalGap="0">
+					<mx:Panel height="100%"
+							  width="100%"
+							  color="#FF0000"
+							  fontSize="14"
+							  dropShadowEnabled="false"
+							  title="BasicInfomation">
+						<mx:Form id="f01">
+							<mx:FormItem id="fi1" label="RealName:" enabled="false">
+								<mx:TextInput id="txtrn" text="{basicInfo.realName}"/>
+							</mx:FormItem>
+							<mx:FormItem id="fi2" label="IdentityNumber:" enabled="false">
+								<mx:TextInput id="txtin" text="{basicInfo.identityNumber}" maxChars="18" restrict="0-9"/>
+							</mx:FormItem>
+							<mx:FormItem id="fi3" label="Email:" enabled="false">
+								<mx:TextInput id="txtem" text="{basicInfo.email}"/>
+							</mx:FormItem>
+							<mx:FormItem id="fi4" label="Phone:" enabled="false">
+								<mx:TextInput id="txtp" text="{basicInfo.phone}" maxChars="11" restrict="0-9"/>
+							</mx:FormItem>
+							<mx:HBox width="100%" horizontalAlign="right">
+								<mx:Button id="btnm" label="Modify" click="basicInfoM_clickHandler(event)"/>
+								<mx:Button id="btnc" label="Cancel" enabled="false" click="basicInfoC_clickHandler(event)"/>
+							</mx:HBox>
+						</mx:Form>
+					</mx:Panel>
+					<mx:Panel height="100%"
+							  width="100%"
+							  color="#FF0000"
+							  fontSize="14"
+							  layout="horizontal"
+							  dropShadowEnabled="false"
+							  title="ReceiveAddress">
+						<mx:Form>
+							<mx:FormItem id="fi5" label="ReceiverName:" enabled="false">
+								<mx:TextInput id="txt2rn" text="{currentAddr.receiveName}" maxChars="14"/>
+							</mx:FormItem>
+							<mx:FormItem id="fi6" label="City:" enabled="false">
+								<mx:TextInput id="txt2c" text="{currentAddr.city}" maxChars="20"/>
+							</mx:FormItem>
+							<mx:FormItem id="fi7" label="DetailAddress:" enabled="false">
+								<mx:TextInput id="txt2da" text="{currentAddr.street}" maxChars="20"/>
+							</mx:FormItem>
+							<mx:FormItem id="fi8" label="Phone:" enabled="false">
+								<mx:TextInput id="txt2p" text="{currentAddr.phone}" maxChars="11" restrict="0-9"/>
+							</mx:FormItem>
+							<mx:FormItem id="fi9" label="ZipCode:" enabled="false">
+								<mx:TextInput id="txt2zc" text="{currentAddr.zipCode}" maxChars="6" restrict="0-9"/>
+							</mx:FormItem>
+							<mx:HBox width="100%" horizontalAlign="right">
+								<mx:Button id="btnn2" label="New" click="btnn2_clickHandler(event)"/>
+								<mx:Button id="btnm2" label="Modify" click="btnm2_clickHandler(event)"/>
+								<mx:Button id="btnd2" label="Del" click="btnd2_clickHandler(event)"/>
+								<mx:Button id="btnc2" label="Cancel" click="btnc2_clickHandler(event)" enabled="false"/>
+							</mx:HBox>
+						</mx:Form>
+						<mx:DataGrid id="dg2" width="100%" height="100%" itemClick="dg2_itemClickHandler(event)">
+							<mx:columns>
+								<mx:DataGridColumn textAlign="center" headerText="ReceiveName" dataField="receiveName" showDataTips="true" dataTipField="receiveName"/>
+								<mx:DataGridColumn textAlign="center" headerText="City" dataField="city" showDataTips="true" dataTipField="city"/>
+								<mx:DataGridColumn textAlign="center" headerText="Street" dataField="street" showDataTips="true" dataTipField="street"/>
+								<mx:DataGridColumn textAlign="center" headerText="Phone" dataField="phone" showDataTips="true" dataTipField="phone"/>
+								<mx:DataGridColumn textAlign="center" headerText="ZipCode" dataField="zipCode" showDataTips="true" dataTipField="zipCode"/>
+							</mx:columns>
+						</mx:DataGrid>
+					</mx:Panel>
+				</mx:VBox>
+			</mx:ViewStack>
+		</mx:HBox>
+		<mx:HBox minHeight="100" width="100%" borderStyle="solid">
+		</mx:HBox>
+	</mx:VBox>
+</mx:Module>

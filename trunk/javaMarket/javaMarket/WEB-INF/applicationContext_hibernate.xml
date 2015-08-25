@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:flex="http://www.springframework.org/schema/flex"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/flex 
+           http://www.springframework.org/schema/flex/spring-flex-1.0.xsd">
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" >
+		<property name="driverClass" value="com.mysql.jdbc.Driver"/>
+		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/market" />
+		<property name="user" value="root"/>
+		<property name="password" value="chen"/>
+		
+		<property name="autoCommitOnClose" value="true"/>
+		<property name="minPoolSize" value="2"/>
+		<property name="maxPoolSize" value="15"/>
+		<property name="initialPoolSize" value="3"/>
+		<property name="maxIdleTime" value="60"/>
+		<property name="checkoutTimeout" value="1000"/>
+	</bean>
+	
+	<bean id="marketSessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mappingResources">
+      		<list>
+      			<value>com/digo/pojo/Account.hbm.xml</value>
+      			<value>com/digo/pojo/Comment.hbm.xml</value>
+      			<value>com/digo/pojo/Goods.hbm.xml</value>
+      			<value>com/digo/pojo/Orderrelation.hbm.xml</value>
+      			<value>com/digo/pojo/Orders.hbm.xml</value>
+      			<value>com/digo/pojo/Power.hbm.xml</value>
+      			<value>com/digo/pojo/Receiveaddress.hbm.xml</value>
+      			<value>com/digo/pojo/Records.hbm.xml</value>
+      			<value>com/digo/pojo/Role.hbm.xml</value>
+      			<value>com/digo/pojo/Rolerelation.hbm.xml</value>
+      			<value>com/digo/pojo/User.hbm.xml</value>
+      		</list>	
+		</property>
+		
+		<property name="hibernateProperties">
+			<value>
+				hibernate.dialect=org.hibernate.dialect.MySQLDialect
+				hibernate.show_sql=true
+				hibernate.format_sql=true
+				hibernate.current_session_context_class=thread
+			</value>
+		</property>
+	</bean>
+	
+
+</beans>

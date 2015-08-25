@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:container="comp.container.*" xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="0">
+	<mx:Script>
+		<![CDATA[
+			import comp.rightPopDetailBoxBar.rightPopDetailBox.RightPopDetailBox;
+			import mx.collections.ArrayCollection;
+			import mx.controls.LinkButton;
+			import mx.core.Container;
+			import mx.events.DynamicEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import util.StaticTool;
+			import vo.TreeNodeVO_TypeChildren;
+
+			[Bindable]
+			private var _dataNodeAC:ArrayCollection;
+
+			private var detailBox:RightPopDetailBox;
+
+			private var tempAC:ArrayCollection;
+
+			private function initRepeater():void
+			{
+				for each(var item:TreeNodeVO_TypeChildren in _dataNodeAC)
+				{
+					var btnAC:ArrayCollection = new ArrayCollection();
+					for each(var btnItem:TreeNodeVO_TypeChildren in item.children)
+					{
+						var btn:LinkButton = new LinkButton();
+						btn.label = btnItem.label;
+						btn.data = btnItem;
+						btn.addEventListener(MouseEvent.CLICK, linkBtnClick);
+						btnAC.addItem(btn);
+					}
+					item.children = btnAC;
+				}
+				rp.dataProvider = _dataNodeAC;
+
+			}
+
+			private function linkBtnClick(event:MouseEvent):void
+			{
+				var e:DynamicEvent = new DynamicEvent(StaticTool.MENUCLICK)
+				e.data = event.currentTarget.data.value;
+				dispatchEvent(e);
+
+			}
+
+//注释弹出详细框
+//			private function resizePopup(event:FlexEvent):void{
+//				detailBox.x = 400;
+//				detailBox.y = 400;
+//				detailBox.groupsAC = tempAC;
+//			}
+			private function setRollOutStyle0(event:MouseEvent):void
+			{
+				(event.target as Container).styleName = "detailBoxBar0";
+
+			}
+
+			private function setRollOutStyle1(event:MouseEvent):void
+			{
+				(event.target as Container).styleName = "detailBoxBar1";
+
+			}
+
+			private function setRollOverStyle(event:MouseEvent):void
+			{
+				(event.target as Container).styleName = "rollOverDetailBoxBar";
+
+//				detailBox = new RightPopDetailBox();
+//				tempAC = (this._dataNodeAC[event.currentTarget.repeaterIndex] as TreeNodeVO_TypeChildren).groups;
+//				detailBox.addEventListener(FlexEvent.CREATION_COMPLETE,resizePopup);
+//				PopUpManager.addPopUp(detailBox,this);
+			}
+
+			private function setVBoxStyle():void
+			{
+				for(var i:int = 0; i < _dataNodeAC.length; i++)
+				{
+					if(i % 2 == 1)
+					{
+						(this.getChildAt(i) as Container).styleName = "detailBoxBar0";
+						(this.getChildAt(i) as Container).addEventListener(MouseEvent.ROLL_OUT,
+							setRollOutStyle0);
+					}
+					else
+					{
+						(this.getChildAt(i) as Container).styleName = "detailBoxBar1";
+						(this.getChildAt(i) as Container).addEventListener(MouseEvent.ROLL_OUT,
+							setRollOutStyle1);
+					}
+					(this.getChildAt(i) as Container).addEventListener(MouseEvent.ROLL_OVER,
+						setRollOverStyle);
+				}
+
+			}
+
+			[Bindable]
+			public function get dataNodeAC():ArrayCollection
+			{
+				return _dataNodeAC;
+
+			}
+
+			public function set dataNodeAC(value:ArrayCollection):void
+			{
+				_dataNodeAC = value;
+				initRepeater();
+
+			}
+		]]>
+	</mx:Script>
+	<mx:Repeater id="rp" repeatEnd="{setVBoxStyle()}">
+		<mx:VBox width="250" verticalGap="6">
+			<mx:HBox width="100%" paddingTop="8">
+				<mx:Label text="{rp.currentItem.label}" width="100%" fontWeight="bold" textAlign="center"/>
+
+			</mx:HBox>
+			<container:flowBox dataProvider="{rp.currentItem.children}" direction="horizontal"/>
+
+		</mx:VBox>
+
+	</mx:Repeater>
+
+</mx:VBox>

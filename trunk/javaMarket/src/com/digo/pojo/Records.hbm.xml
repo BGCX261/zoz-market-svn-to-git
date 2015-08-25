@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Mar 10, 2013 2:27:50 PM by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.digo.pojo.Records" table="records" catalog="market">
+        <id name="recordsId" type="string">
+            <column name="recordsId" length="32" />
+            <generator class="assigned" />
+        </id>
+        <many-to-one name="account" class="com.digo.pojo.Account" fetch="select" lazy="false">
+            <column name="accountId" length="32" not-null="true" />
+        </many-to-one>
+        <property name="orderId" type="string">
+            <column name="orderId" length="32" not-null="true" />
+        </property>
+        <property name="recordsType" type="char">
+            <column name="recordsType" length="1" not-null="true" />
+        </property>
+        <property name="recordsNumber" type="int">
+            <column name="recordsNumber" not-null="true" />
+        </property>
+        <property name="recordsTime" type="timestamp">
+            <column name="recordsTime" length="19" not-null="true" />
+        </property>
+        <property name="remark" type="string">
+            <column name="remark" length="32" not-null="true" />
+        </property>
+    </class>
+</hibernate-mapping>

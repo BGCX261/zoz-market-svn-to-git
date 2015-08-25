@@ -1,0 +1,74 @@
+/* CSS file */
+global{
+	fontFamily:"����";
+	fontSize:12;
+}
+
+Application{
+	backgroundColor:#FFFFFF;
+}
+
+ApplicationControlBar{
+	dropShadowEnabled:false;
+}
+
+.dropPanel{
+	backgroundColor:#DCDEC4;
+	color:#000000;
+}
+
+.detailBoxBar0{
+	backgroundColor:#FFEEEE;
+	color:#000000;
+}
+
+.detailBoxBar1{
+	backgroundColor:#FFFFFF;
+	color:#000000;
+}
+
+.rollOverDetailBoxBar{
+	backgroundColor:#FE9F62;
+	color:#FFFFFF;
+}
+
+LinkButton{
+	cornerRadius:"4";
+	fontWeight:normal;
+	rollOverColor:#FFFFFF;
+	textDecoration:underline;
+	selectionColor:#DFDEFE;
+}
+
+RightPopDetailBoxBar{
+	dropShadowEnabled:true;
+	borderStyle:solid;
+	borderThickness:1;
+	borderAlpha:0.3;
+	borderSides:right-left;
+	shadowDirection:right;
+	shadowDistance:5;
+}
+
+DeleteSearchPanel{
+	backgroundColor:#CCDEB4;
+}
+
+Button{
+	cornerRadius:"2";
+}
+
+.panelTitleStyle{
+	fontSize:18;
+	fontWeight:bold;
+}
+
+.panelTitle2Style{
+	fontSize:16;
+	fontWeight:bold;
+}
+
+ToggleButtonBar{
+	cornerRadius:4;
+	horizontalGap:4;
+}

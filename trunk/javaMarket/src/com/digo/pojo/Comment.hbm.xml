@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Mar 10, 2013 2:27:50 PM by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.digo.pojo.Comment" table="comment" catalog="market">
+        <id name="commentId" type="string">
+            <column name="commentId" length="32" />
+            <generator class="assigned" />
+        </id>
+        <many-to-one name="goods" class="com.digo.pojo.Goods" fetch="select" lazy="false">
+            <column name="goodsId" length="32" not-null="true">
+                <comment>&#201;&#204;&#198;&#183;ID</comment>
+            </column>
+        </many-to-one>
+        <many-to-one name="user" class="com.digo.pojo.User" fetch="select" lazy="false">
+            <column name="userId" length="32" not-null="true">
+                <comment>&#211;&#195;&#187;&#167;ID</comment>
+            </column>
+        </many-to-one>
+        <property name="commentScore" type="char">
+            <column name="commentScore" length="1" not-null="true">
+                <comment>&#198;&#192;&#183;&#214;</comment>
+            </column>
+        </property>
+        <property name="advantage" type="string">
+            <column name="advantage" length="512" not-null="true">
+                <comment>&#211;&#197;&#181;&#227;</comment>
+            </column>
+        </property>
+        <property name="disadvantage" type="string">
+            <column name="disadvantage" length="512" not-null="true">
+                <comment>&#200;&#177;&#181;&#227;</comment>
+            </column>
+        </property>
+        <property name="commentContent" type="string">
+            <column name="commentContent" length="512" not-null="true">
+                <comment>&#198;&#192;&#194;&#219;&#196;&#218;&#200;&#221;</comment>
+            </column>
+        </property>
+        <property name="commentStatus" type="char">
+            <column name="commentStatus" length="1" not-null="true">
+                <comment>&#198;&#192;&#194;&#219;&#215;&#180;&#204;&#172;</comment>
+            </column>
+        </property>
+        <property name="commentTime" type="timestamp">
+            <column name="commentTime" length="19" not-null="true">
+                <comment>&#198;&#192;&#194;&#219;&#202;&#177;&#188;&#228;</comment>
+            </column>
+        </property>
+    </class>
+</hibernate-mapping>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Mar 10, 2013 2:27:50 PM by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.digo.pojo.Account" table="account" catalog="market">
+        <id name="accountId" type="string">
+            <column name="accountId" length="32" />
+            <generator class="foreign">
+                <param name="property">user</param>
+            </generator>
+        </id>
+        <one-to-one name="user" class="com.digo.pojo.User" constrained="true"></one-to-one>
+        <property name="accountPasswords" type="string">
+            <column name="accountPasswords" length="32" not-null="true" />
+        </property>
+        <property name="initTime" type="timestamp">
+            <column name="initTime" length="19" not-null="true" />
+        </property>
+        <property name="accountStatus" type="char">
+            <column name="accountStatus" length="1" not-null="true" />
+        </property>
+        <property name="balance" type="int">
+            <column name="balance" not-null="true" />
+        </property>
+        <property name="remark" type="string">
+            <column name="remark" length="32" not-null="true" />
+        </property>
+        <set name="recordses" table="records" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="accountId" length="32" not-null="true" />
+            </key>
+            <one-to-many class="com.digo.pojo.Records" />
+        </set>
+    </class>
+</hibernate-mapping>

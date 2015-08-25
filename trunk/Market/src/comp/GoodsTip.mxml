@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="180" height="270" backgroundColor="#FFFFFF"
+		 horizontalAlign="center" borderStyle="solid" paddingBottom="10" verticalGap="0" creationComplete="vbox1_creationCompleteHandler(event)">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			import util.StaticTool;
+			
+			import vo.GoodsBeanVO;
+			
+			[Bindable]
+			private var _goodsNode:GoodsBeanVO;
+			
+			[Bindable]
+			private var commentCount:String;
+			
+			[Bindable]
+			private var price:String;
+			
+			[Bindable]
+			private var imageS:String;
+			
+			[Bindable]
+			private var nodeName:String;
+
+			public function set goodsNode(value:GoodsBeanVO):void
+			{
+				_goodsNode = value;
+				nodeName = _goodsNode.goodsName;
+				price = "￥" + _goodsNode.goodsPrice.toFixed(2);
+				commentCount = "Already " + _goodsNode.commentCount + " people evaluated";
+				imageS = StaticTool.imageRoot + _goodsNode.goodsImage;
+			}
+			
+			public function get goodsNode():GoodsBeanVO
+			{
+				return _goodsNode;
+			}
+
+			protected function vbox1_creationCompleteHandler(event:FlexEvent):void
+			{
+				this.addEventListener(MouseEvent.ROLL_OVER,shadowOn);
+				this.addEventListener(MouseEvent.ROLL_OUT,shadowOff);
+				this.setStyle("shadowDistance","5");
+				this.setStyle("shadowDirection","right");
+			}
+			
+			private function shadowOn(e:MouseEvent):void{
+				this.setStyle("dropShadowEnabled","true");
+			}
+			
+			private function shadowOff(e:MouseEvent):void{
+				this.setStyle("dropShadowEnabled","false");
+			}
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%" height="100%" horizontalAlign="center" verticalGap="0">
+		<mx:Image id="dataImage" maintainAspectRatio="false" source="{imageS}"
+				  scaleContent="true" width="100%" height="100%"/>
+		<mx:Text text="{nodeName}" width="100%"/>
+		<mx:Label text="{price}" color="#FF0000" fontWeight="bold"/>
+		<mx:Label text="{commentCount}"/>
+	</mx:VBox>
+	<mx:HBox>
+		<mx:Button label="Buy"/>
+	</mx:HBox>
+</mx:VBox>

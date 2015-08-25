@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Mar 10, 2013 2:27:50 PM by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.digo.pojo.User" table="user" catalog="market">
+        <id name="userId" type="string">
+            <column name="userId" length="32" />
+            <generator class="assigned" />
+        </id>
+        <property name="username" type="string">
+            <column name="username" length="16" not-null="true" />
+        </property>
+        <property name="userpasswords" type="string">
+            <column name="userpasswords" length="32" not-null="true" />
+        </property>
+        <property name="realname" type="string">
+            <column name="realname" length="16" not-null="true" />
+        </property>
+        <property name="roleId" type="string">
+            <column name="roleId" length="32" not-null="true" />
+        </property>
+        <property name="identityNumber" type="string">
+            <column name="identityNumber" length="18" not-null="true" />
+        </property>
+        <property name="email" type="string">
+            <column name="email" length="64" not-null="true" />
+        </property>
+        <property name="phone" type="string">
+            <column name="phone" length="11" not-null="true" />
+        </property>
+        <property name="points" type="int">
+            <column name="points" not-null="true" />
+        </property>
+        <property name="creditLevel" type="short">
+            <column name="creditLevel" not-null="true" />
+        </property>
+        <one-to-one name="account" class="com.digo.pojo.Account" lazy="false"></one-to-one>
+        <set name="orderses" table="orders" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="userId" length="32" not-null="true" />
+            </key>
+            <one-to-many class="com.digo.pojo.Orders" />
+        </set>
+        <set name="goodses" table="goods" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="merId" length="32" not-null="true" />
+            </key>
+            <one-to-many class="com.digo.pojo.Goods" />
+        </set>
+        <set name="comments" table="comment" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="userId" length="32" not-null="true">
+                    <comment>&#211;&#195;&#187;&#167;ID</comment>
+                </column>
+            </key>
+            <one-to-many class="com.digo.pojo.Comment" />
+        </set>
+        <set name="receiveaddresses" table="receiveaddress" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="userId" length="32" not-null="true" />
+            </key>
+            <one-to-many class="com.digo.pojo.Receiveaddress" />
+        </set>
+    </class>
+</hibernate-mapping>

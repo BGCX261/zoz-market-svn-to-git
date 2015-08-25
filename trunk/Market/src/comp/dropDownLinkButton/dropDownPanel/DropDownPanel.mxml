@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+		 autoLayout="true"
+		 height="100%"
+		 styleName="dropPanel"
+		 width="100%"
+		 creationComplete="this_creationCompleteHandler(event)"
+		 verticalGap="0">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.DynamicEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.events.ResizeEvent;
+			import util.StaticTool;
+			import vo.TreeNodeVO_TypeChildren;
+
+			protected function linkbar1_itemClickHandler(event:MouseEvent):void
+			{
+				var e:DynamicEvent = new DynamicEvent(StaticTool.LINK);
+				e.data = (event.currentTarget.getRepeaterItem() as TreeNodeVO_TypeChildren).
+					value;
+				dispatchEvent(e);
+
+			}
+
+			protected function this_creationCompleteHandler(event:FlexEvent):void
+			{
+			}
+		]]>
+	</mx:Script>
+	<mx:Repeater id="linkBar">
+		<mx:LinkButton label="{linkBar.currentItem.label}" width="100%" click="linkbar1_itemClickHandler(event)" textDecoration="none"/>
+
+	</mx:Repeater>
+
+</mx:VBox>

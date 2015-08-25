@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+		  currentState="login"
+		  layout="horizontal"
+		  minHeight="300"
+		  minWidth="420"
+		  titleStyleName="panelTitleStyle"
+		  creationComplete="panel_creationCompleteHandler(event)">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.DynamicEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.AsyncResponder;
+			import mx.rpc.AsyncToken;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.remoting.RemoteObject;
+			import mx.utils.ObjectUtil;
+			
+			import util.ModelLocator;
+			import util.PopUpUtil;
+			import util.StaticTool;
+			
+			import vo.AccountVO;
+
+			[Bindable]
+			private var msg:AccountVO;
+			
+			[Bindable]
+			private var remoteObject:RemoteObject;
+			
+			private var modelLocater:ModelLocator;
+
+			protected function login_clickHandler(event:MouseEvent):void
+			{
+				if(nme.text == "")
+				{
+					Alert.show("please input account", "Tip");
+					return;
+				}
+				if(pwd.text == "")
+				{
+					Alert.show("please input password", "Tip");
+					return;
+				}
+				msg.account = nme.text;
+				msg.password = pwd.text;
+				
+				var token1:AsyncToken = remoteObject.logIn(msg);
+				token1.addResponder(new AsyncResponder(function(event:ResultEvent, token:AsyncToken):void
+				{
+					if(event.result)
+					{
+						var e:AccountVO = event.result as AccountVO;
+						if(e.account != null)
+						{
+							modelLocater = ModelLocator.newInstance();
+							modelLocater.currentAccount = e.account;
+							modelLocater.currentPower = e.power;
+							modelLocater.cash = e.cash;
+							modelLocater.currentPassword = e.password;
+							modelLocater.type = e.type;
+							var ere:DynamicEvent = new DynamicEvent(StaticTool.LOGIN);
+							dispatchEvent(ere);
+						}else{
+							Alert.show("your password is wrong");
+						}
+					}else{
+						Alert.show("your account is wrong");
+					}
+				}, onRemoteFaultHandler));
+
+			}
+
+			protected function register_clickHandler(event:MouseEvent):void
+			{
+				if(nme_register.text == "")
+				{
+					Alert.show("please input account", "Tip");
+					return;
+				}
+				if(pwd_register1.text == "")
+				{
+					Alert.show("please input password", "Tip");
+					return;
+				}
+				if(pwd_register2.text == "")
+				{
+					Alert.show("please input correct password", "Tip");
+					return;
+				}
+				if(pwd_register2.text != pwd_register1.text)
+				{
+					Alert.show("please input password again", "Tip");
+					return;
+				}
+				
+				msg.account = nme_register.text;
+				msg.password = pwd_register1.text;
+				msg.type = rbg.selectedValue.toString();
+				
+				var token1:AsyncToken = remoteObject.validateName(msg.account);
+				token1.addResponder(new AsyncResponder(function(event:ResultEvent, token:AsyncToken):void
+				{
+					 if(event.result as Boolean)
+					 {
+						 Alert.show("Please try another account！","Tips");
+					 }else{
+						 var token2:AsyncToken = remoteObject.saveAccount(msg);
+						 token2.addResponder(new AsyncResponder(function(event:ResultEvent, token:AsyncToken):void
+						 {
+							 if(event.result as Boolean)
+							 {
+								 Alert.show("Registration success！","Tips");
+							 }else{
+								 Alert.show("Registration fail！","Tips");
+							 }
+						 }, onRemoteFaultHandler));
+					 }
+				}, onRemoteFaultHandler));
+
+			}
+			
+			//初始化远程bean对象
+			private function initRemoteObject():void
+			{
+				remoteObject = new RemoteObject();
+				remoteObject.destination = "facade";
+				remoteObject.showBusyCursor = true;
+				
+			}
+
+			public function init(v:Object):void
+			{
+				this.msg = (v is AccountVO) ? (ObjectUtil.copy(v) as AccountVO) : new AccountVO();
+				if(cb1 != null)
+				{
+					cb1.selected = false;
+				}
+			}
+			
+			protected function panel_creationCompleteHandler(event:FlexEvent):void
+			{
+				initRemoteObject();
+			}
+			
+			//远程调用出错，弹出栈信息
+			private function onRemoteFaultHandler(e:FaultEvent, token:AsyncToken):void
+			{
+				Alert.show(e.message.toString());
+				
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="login">
+			<mx:SetProperty value="true" name="visible" target="{loginV}"/>
+			<mx:SetProperty value="true" name="includeInLayout" target="{loginV}"/>
+			<mx:SetProperty value="false" name="visible" target="{registerV}"/>
+			<mx:SetProperty value="false" name="includeInLayout" target="{registerV}"/>
+			<mx:SetProperty value="300" name="minHeight" target="{this}"/>
+			<mx:SetProperty value="" name="text" target="{nme_register}"/>
+			<mx:SetProperty value="" name="text" target="{pwd_register1}"/>
+			<mx:SetProperty value="" name="text" target="{pwd_register2}"/>
+			<mx:SetProperty value="" name="text" target="{nme}"/>
+			<mx:SetProperty value="" name="text" target="{pwd}"/>
+			<mx:SetProperty value="Login Market's Account" name="title" target="{this}"/>
+
+		</mx:State>
+		<mx:State name="register">
+			<mx:SetProperty value="true" name="visible" target="{registerV}"/>
+			<mx:SetProperty value="true" name="includeInLayout" target="{registerV}"/>
+			<mx:SetProperty value="false" name="visible" target="{loginV}"/>
+			<mx:SetProperty value="false" name="includeInLayout" target="{loginV}"/>
+			<mx:SetProperty value="325" name="minHeight" target="{this}"/>
+			<mx:SetProperty value="false" name="selected" target="{cb1}"/>
+			<mx:SetProperty value="" name="text" target="{nme}"/>
+			<mx:SetProperty value="" name="text" target="{pwd}"/>
+			<mx:SetProperty value="" name="text" target="{nme_register}"/>
+			<mx:SetProperty value="" name="text" target="{pwd_register1}"/>
+			<mx:SetProperty value="" name="text" target="{pwd_register2}"/>
+			<mx:SetProperty value="Register Market's Account" name="title" target="{this}"/>
+
+		</mx:State>
+
+	</mx:states>
+	<mx:VBox height="100%"
+			 id="loginV"
+			 width="100%"
+			 paddingTop="8"
+			 verticalGap="10">
+		<mx:VBox width="100%" horizontalAlign="center" verticalGap="0">
+			<mx:HBox width="100%" horizontalGap="0" paddingLeft="40">
+				<mx:LinkButton label="Register" click="{this.currentState='register'}" textDecoration="none"/>
+				<mx:VRule height="18"/>
+				<mx:LinkButton label="Login" click="{this.currentState='login'}" textDecoration="none"/>
+
+			</mx:HBox>
+			<mx:HRule width="80%"/>
+
+		</mx:VBox>
+		<mx:HBox>
+			<mx:Label text="account:" width="105" textAlign="right"/>
+			<mx:TextInput id="nme" width="200" text="{msg.account}"/>
+
+		</mx:HBox>
+		<mx:HBox>
+			<mx:Label text="password:" width="105" textAlign="right"/>
+			<mx:TextInput id="pwd" width="200" displayAsPassword="true" text="{msg.password}"/>
+
+		</mx:HBox>
+		<mx:VBox width="100%" horizontalAlign="center">
+			<mx:HRule width="80%"/>
+
+		</mx:VBox>
+		<mx:HBox paddingLeft="120">
+			<mx:Button height="25" label="submit" width="80" click="login_clickHandler(event)"/>
+			<mx:Button height="25" label="cancel" width="80" click="{PopUpUtil.remove(this)}"/>
+
+		</mx:HBox>
+
+	</mx:VBox>
+	<mx:VBox height="100%"
+			 id="registerV"
+			 width="100%"
+			 paddingTop="8"
+			 verticalGap="10">
+		<mx:VBox width="100%" horizontalAlign="center" verticalGap="0">
+			<mx:HBox width="100%" horizontalGap="0" paddingLeft="40">
+				<mx:LinkButton label="Register" click="{this.currentState='register'}" textDecoration="none"/>
+				<mx:VRule height="18"/>
+				<mx:LinkButton label="Login" click="{this.currentState='login'}" textDecoration="none"/>
+
+			</mx:HBox>
+			<mx:HRule width="80%"/>
+
+		</mx:VBox>
+		<mx:HBox>
+			<mx:Label text="account:*" width="105" textAlign="right"/>
+			<mx:TextInput id="nme_register" width="200" text="{msg.account}"/>
+
+		</mx:HBox>
+		<mx:HBox>
+			<mx:Label text="password:*" width="105" textAlign="right"/>
+			<mx:TextInput id="pwd_register1" width="200" displayAsPassword="true" text="{msg.password}"/>
+
+		</mx:HBox>
+		<mx:HBox>
+			<mx:Label text="Correct password:*" width="105" textAlign="right"/>
+			<mx:TextInput id="pwd_register2" width="200" displayAsPassword="true" text="{msg.password}"/>
+
+		</mx:HBox>
+		<mx:HBox paddingLeft="120">
+			<mx:RadioButtonGroup id="rbg" selectedValue="role1"/>
+			<mx:RadioButton groupName="rbg" value="role1" label="Buyer"/>
+			<mx:RadioButton groupName="rbg" value="role2" label="Seller"/>
+		</mx:HBox>
+		<mx:VBox width="100%" horizontalAlign="center">
+			<mx:CheckBox id="cb1" label="I agree with the registration agreement" selected="false"/>
+			<mx:HRule width="80%"/>
+
+		</mx:VBox>
+		<mx:HBox paddingLeft="120">
+			<mx:Button enabled="{cb1.selected}"
+					   height="25"
+					   label="submit"
+					   width="80"
+					   click="register_clickHandler(event)"/>
+			<mx:Button height="25" label="cancel" width="80" click="{PopUpUtil.remove(this)}"/>
+
+		</mx:HBox>
+
+	</mx:VBox>
+
+</mx:Panel>
